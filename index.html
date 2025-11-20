@@ -287,56 +287,75 @@
 
       // Build HTML
       const html = `
-        <div class="card" aria-live="polite">
-          <div class="stat-grid">
-            <div class="stat-card">
-              <span>Soil pH</span>
-              <strong>${pH.toFixed(2)}</strong>
+        <div class="report-grid">
+          <section class="info-card stat-card">
+            <h3>Soil Snapshot</h3>
+            <div class="stat-grid">
+              <div class="stat-chip">
+                <span>Soil pH</span>
+                <strong>${pH.toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>Calcium (mg/L)</span>
+                <strong>${Number(ca).toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>Magnesium (mg/L)</span>
+                <strong>${Number(mg).toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>Water Hardness (ppm)</span>
+                <strong>${hardness.toFixed(2)}</strong>
+              </div>
             </div>
-            <div class="stat-card">
-              <span>Calcium (mg/L)</span>
-              <strong>${Number(ca).toFixed(2)}</strong>
-            </div>
-            <div class="stat-card">
-              <span>Magnesium (mg/L)</span>
-              <strong>${Number(mg).toFixed(2)}</strong>
-            </div>
-            <div class="stat-card">
-              <span>Water Hardness (ppm)</span>
-              <strong>${hardness.toFixed(2)}</strong>
-            </div>
-          </div>
-          
-          <div class="section">
-            <h3>
-              Soil Assessment
+          </section>
+
+          <section class="info-card soil-card">
+            <header>
+              <h3>Soil Assessment</h3>
               <span class="badge ${soilBadge.tone}">${soilBadge.label}</span>
-            </h3>
+            </header>
             <p>${soilType}</p>
-            <div style="margin-top:12px">
-              <strong>Suitable Crops</strong>
-              ${toList(suitableCrops)}
-            </div>
-            ${soilRemedies.length ? `<div style="margin-top:12px"><strong>Soil Remedies</strong>${toList(soilRemedies)}</div>` : ''}
-            ${soilMaintenance.length ? `<div style="margin-top:12px"><strong>Soil Maintenance Tips</strong>${toList(soilMaintenance)}</div>` : ''}
-            ${cropGallery}
-          </div>
+          </section>
 
-          <hr>
-          <div class="section">
-            <h3>
-              Water Report
+          <section class="info-card crops-card">
+            <h3>Suitable Crops</h3>
+            ${toList(suitableCrops)}
+          </section>
+
+          ${soilRemedies.length ? `
+            <section class="info-card remedies-card">
+              <h3>Soil Remedies</h3>
+              ${toList(soilRemedies)}
+            </section>
+          ` : ''}
+
+          ${soilMaintenance.length ? `
+            <section class="info-card maintenance-card">
+              <h3>Soil Maintenance Tips</h3>
+              ${toList(soilMaintenance)}
+            </section>
+          ` : ''}
+
+          <section class="info-card water-card">
+            <header>
+              <h3>Water Report</h3>
               <span class="badge ${waterBadge}">${waterType}</span>
-            </h3>
+            </header>
             <p>${waterImpact}</p>
-            ${waterRemedies.length ? `<div style="margin-top:12px"><strong>Mitigation</strong>${toList(waterRemedies)}</div>` : ''}
-          </div>
+            ${waterRemedies.length ? `<div class="sub-list"><strong>Mitigation</strong>${toList(waterRemedies)}</div>` : ''}
+          </section>
 
-          <hr>
-          <div class="section">
+          <section class="info-card suggestions-card">
             <h3>General Suggestions</h3>
             ${toList(generalSuggestions)}
-          </div>
+          </section>
+
+          ${cropGallery ? `
+            <section class="info-card visual-guide-card">
+              ${cropGallery}
+            </section>
+          ` : ''}
         </div>
       `;
       return html;
