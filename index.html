@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Soil & Water Analysis</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Soil Health and Crops Suggestions</h1>
+    </header>
+
+    <div class="card">
+      <form id="analysisForm" onsubmit="return false;">
+        <div>
+          <label for="ph">Enter Soil pH value</label>
+          <input id="ph" type="number" step="0.1" min="0" max="14" placeholder="e.g. 6.5" required>
+        </div>
+
+        <div>
+          <label for="calcium">Enter Calcium ion concentration (mg/L)</label>
+          <input id="calcium" type="number" step="0.1" min="0" placeholder="mg/L" required>
+        </div>
+
+        <div>
+          <label for="magnesium">Enter Magnesium ion concentration (mg/L)</label>
+          <input id="magnesium" type="number" step="0.1" min="0" placeholder="mg/L" required>
+        </div>
+
+        <div class="actions">
+          <button id="runBtn" type="button">Generate Report</button>
+          <button id="resetBtn" type="button">Reset</button>
+        </div>
+      </form>
+
+      <div id="report" class="report" aria-live="polite"></div>
+    </div>
+
+    <p class="muted" style="margin-top:12px">This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.</p>
+  </div>
+
+  <div id="desktopNotice" class="desktop-notice" role="alert" aria-live="assertive">
+    <div class="notice-card">
+      <h2>Desktop Mode Required</h2>
+      <p>This experience is optimized for desktop screens. Please open the page on a laptop/desktop or enable “Desktop site” in your mobile browser.</p>
+      <button id="retryView" type="button">I enabled desktop mode</button>
+    </div>
+  </div>
+
+  <script>
+    const runBtn = document.getElementById('runBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const phInput = document.getElementById('ph');
+    const caInput = document.getElementById('calcium');
+    const mgInput = document.getElementById('magnesium');
+    const reportDiv = document.getElementById('report');
+    const desktopNotice = document.getElementById('desktopNotice');
+    const retryViewBtn = document.getElementById('retryView');
+
+    const toList = (items = []) => {
+      if (!items.length) return '';
+      return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
+    };
+
+    const badgeForPH = (pH) => {
+      if (pH < 5.5) return {label:'Acidic', tone:'warn'};
+      if (pH <= 7) return {label:'Slightly acidic', tone:'success'};
+      return {label:'Alkaline', tone:'danger'};
+    };
+
+    const normalizeKey = (label = '') => label.toLowerCase().replace(/[^a-z0-9]/g,'');
+
+    const cropImages = {};
+    const addImage = (names, path) => {
+      names.forEach(name => {
+        cropImages[normalizeKey(name)] = path;
+      });
+    };
+
+    addImage(['Apple'], 'pictures/apple.jpg');
+    addImage(['Banana'], 'pictures/banana.jpg');
+    addImage(['Barley'], 'pictures/barley.jpg');
+    addImage(['Beans'], 'pictures/beans.jpg');
+    addImage(['Bitter Gourd','Bittergourd'], 'pictures/bitter_gourd.jpg');
+    addImage(['Bottle Gourd','Bottlegourd'], 'pictures/bottle_gourd.jpg');
+    addImage(['Brinjal','Eggplant','Egg Plant'], 'pictures/brinjal_eggplant.jpg');
+    addImage(['Broccoli'], 'pictures/broccoli.jpg');
+    addImage(['Buckwheat'], 'pictures/buckwheat.jpg');
+    addImage(['Cabbage'], 'pictures/cabbage.jpg');
+    addImage(['Carrot'], 'pictures/carrot.jpg');
+    addImage(['Cauliflower'], 'pictures/cauliflower.jpg');
+    addImage(['Chickpea','Chick Pea'], 'pictures/chickpeas.jpg');
+    addImage(['Chilli','Chili'], 'pictures/chilli.jpg');
+    addImage(['Chrysanthemum'], 'pictures/chrysanthemum.jpg');
+    addImage(['Citrus'], 'pictures/citrus.jpg');
+    addImage(['Colocasia'], 'pictures/colocasia.jpg');
+    addImage(['Corn','Maize'], 'pictures/corn.jpg');
+    addImage(['Cowpea','Cow Pea'], 'pictures/cowpea.jpg');
+    addImage(['Cucumber'], 'pictures/cucumber.jpg');
+    addImage(['Dahlia'], 'pictures/dahlia.jpg');
+    addImage(['Garden Pea','Gardenpea'], 'pictures/gardenpea.jpg');
+    addImage(['Garlic'], 'pictures/garlic.jpg');
+    addImage(['Ginger'], 'pictures/ginger.jpg');
+    addImage(['Gooseberry','Gooseberry (Amla)','Amla'], 'pictures/gooseberry');
+    addImage(['Groundnut','Peanut'], 'pictures/peanut.jpg');
+    addImage(['Guava'], 'pictures/guava.jpg');
+    addImage(['Jackfruit','Jack fruit'], 'pictures/jackfruit.jpg');
+    addImage(['Kiwi'], 'pictures/kiwi.jpg');
+    addImage(['Knolkhol','Kohlrabi'], 'pictures/knolkhol.jpg');
+    addImage(['Lentil'], 'pictures/lentil.jpg');
+    addImage(['Linseed','Flaxseed'], 'pictures/linseed.jpg');
+    addImage(['Litchi','Lychee'], 'pictures/litchi.jpg');
+    addImage(['Mango'], 'pictures/mango.jpg');
+    addImage(['Marigold'], 'pictures/marigold.jpg');
+    addImage(['Millets'], 'pictures/millets');
+    addImage(['Mungbean','Mung bean','Green Gram','Greengram'], 'pictures/mungbean');
+    addImage(['Mustard'], 'pictures/mustard');
+    addImage(['Oat','Oats'], 'pictures/oats.jpg');
+    addImage(['Okra','Ladyfinger','Lady Finger'], 'pictures/okra.jpg');
+    addImage(['Onion'], 'pictures/onion.jpg');
+    addImage(['Papaya'], 'pictures/papaya.jpg');
+    addImage(['Passionfruit','Passion fruit'], 'pictures/passionfruit.jpg');
+    addImage(['Pea','Peas'], 'pictures/pea.jpg');
+    addImage(['Peach'], 'pictures/peach.jpg');
+    addImage(['Pigeon Pea','Pigeonpea','Arhar'], 'pictures/pigeonpeas.jpg');
+    addImage(['Pineapple'], 'pictures/pineapple.jpg');
+    addImage(['Plum'], 'pictures/plum.jpg');
+    addImage(['Potato'], 'pictures/potato.jpg');
+    addImage(['Pumpkin'], 'pictures/pumpkin.jpg');
+    addImage(['Radish'], 'pictures/raddish.jpg');
+    addImage(['Rajma','Kidney Bean','Kidney Beans'], 'pictures/rajma.jpg');
+    addImage(['Rapeseed'], 'pictures/rapeseed.jpg');
+    addImage(['Ridge Gourd','Ridgegourd'], 'pictures/ridgegourd.jpg');
+    addImage(['Rose'], 'pictures/rose.jpg');
+    addImage(['Rye'], 'pictures/rye.jpg');
+    addImage(['Sesame','Til'], 'pictures/sesame.jpg');
+    addImage(['Soybean','Soyabean'], 'pictures/soyabean.jpg');
+    addImage(['Strawberry'], 'pictures/strawberry.jpg');
+    addImage(['Sugarcane'], 'pictures/sugarcane.jpg');
+    addImage(['Sunflower'], 'pictures/sunflower.jpg');
+    addImage(['Sweet Potato'], 'pictures/sweetpotato.jpg');
+    addImage(['Tea','Tea Plant'], 'pictures/teaplant.jpg');
+    addImage(['Tomato'], 'pictures/tomato.jpg');
+    addImage(['Watermelon'], 'pictures/watermelon.jpg');
+    addImage(['Wheat'], 'pictures/wheat.jpg');
+
+    const extractCropNames = (groups = []) => {
+      return groups.flatMap(group => {
+        if (!group.includes(':')) return [];
+        const list = group.split(':').slice(1).join(':');
+        return list.split(',')
+          .map(item => item.replace(/\(.*?\)/g,'').trim())
+          .filter(Boolean);
+      });
+    };
+
+    const buildCropGallery = (groups = []) => {
+      const names = extractCropNames(groups);
+      const gallery = [];
+      const seen = new Set();
+
+      for (const name of names) {
+        const key = normalizeKey(name);
+        const src = cropImages[key];
+        if (!src || seen.has(key)) continue;
+        seen.add(key);
+        gallery.push({name, src});
+      }
+
+      if (!gallery.length) return '';
+
+      return `
+        <div class="crop-gallery">
+          <div class="section-heading">
+            <strong>Visual Guide</strong>
+            <span class="muted">Typical varieties for this soil</span>
+          </div>
+          <div class="gallery-grid">
+            ${gallery.map(item => `
+              <figure class="gallery-card">
+                <img src="${item.src}" alt="${item.name}" loading="lazy">
+                <figcaption>${item.name}</figcaption>
+              </figure>
+            `).join('')}
+          </div>
+        </div>
+      `;
+    };
+
+    function classifySoilAndReport(pH, ca, mg) {
+      // hardness formula: hardness (ppm) = (Ca * 2.5) + (Mg * 4.1)
+      const hardness = (Number(ca) * 2.5) + (Number(mg) * 4.1);
+
+      let soilType = '';
+      let suitableCrops = [];
+      let soilRemedies = [];
+      let soilMaintenance = [];
+
+      if (pH < 5.5) {
+        soilType = 'Strongly Acidic Soil (pH < 5.5)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Paddy, Oat, Buckwheat, Rye, Groundnut',
+          'Pulses: Chickpea',
+          'Fruits: Citrus, Gooseberry, Strawberry, Passion fruit, Pineapple',
+          'Vegetables: Radish, Sweet Potato, Potato, Brinjal',
+          'Commercial Spices: Tea, Chilli, Coriander',
+          'Flowers: Rose'
+        ];
+        soilRemedies = [
+          'Apply agricultural lime (CaCO₃) at recommended doses.',
+          'Add Dolomite powder to increase Calcium & Magnesium.',
+          'Incorporate wood ash and well decomposed compost.'
+        ];
+      } else if (pH >= 5.5 && pH < 7.0) {
+        soilType = 'Slightly Acidic to Near Neutral Soil (pH 5.5 - 7.0)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Barley, Wheat, Corn, Maize, Soybean, Sunflower, Linseed, Sesame',
+          'Pulses: Lentil, Rice bean, Cowpea, Mungbean, Pigeon pea, Rajma',
+          'Fruits: Peach, Watermelon, Apple, Papaya, Guava, Litchi, Kiwi, Mango, Plum',
+          'Vegetables: Beans, Broccoli, Cabbage, Carrot, Cucumber, Tomato, Onion, Cauliflower, Bitter Gourd, Pumpkin',
+          'Commercial/Spices: Colocasia, Sugarcane, Onion, Garlic, Ginger',
+          'Flowers: Chrysanthemum, Marigold'
+        ];
+        soilMaintenance = [
+          'Maintain compost and farmyard manure.',
+          'Reduce chemical fertilizers.',
+          'Practice crop rotation.'
+        ];
+      } else if (pH >= 7.0 && pH <= 8.2) {
+        soilType = 'Neutral to Slightly Alkaline Soil (pH 7.0 - 8.2)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Wheat, Barley, Sorghum, Corn, Cotton',
+          'Pulses: Chickpea, Lentil, Pigeon pea, Cowpea',
+          'Fruits: Banana, Mango, Grapes, Guava, Sapota, Papaya',
+          'Vegetables: Tomato, Cabbage, Capsicum, Beetroot, Onion, Garlic',
+          'Commercial Crops: Sugarcane, Tobacco, Cotton',
+          'Flowers: Marigold, Jasmine, Gerbera'
+        ];
+        soilMaintenance = [
+          'Add organic matter routinely to improve soil aggregates.',
+          'Ensure adequate drainage to prevent salt build-up.',
+          'Use balanced fertilization with micronutrient sprays.'
+        ];
+      } else {
+        soilType = 'Alkaline / Sodic Soil (pH > 8.2)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Millets, Mustard, Rapeseed',
+          'Pulses: Pea',
+          'Fruits: Banana, Jackfruit',
+          'Vegetables: Bottle Gourd, Ridge Gourd, Knolkhol, Garden Pea, Okra',
+          'Flowers: Dahlia'
+        ];
+        soilRemedies = [
+          'Apply Gypsum to replace sodium with calcium and reduce alkalinity.',
+          'Mix organic matter like cow dung compost or green manure.',
+          'Use drip or sprinkler irrigation to avoid salt accumulation.',
+          'Apply Elemental Sulfur gradually to reduce pH.'
+        ];
+      }
+
+      // Water hardness classification
+      let waterType = '';
+      let waterImpact = '';
+      let waterRemedies = [];
+      let waterBadge = 'success';
+
+      if (hardness < 75) {
+        waterType = 'Soft Water';
+        waterImpact = 'Safe for irrigation.';
+      } else if (hardness >= 75 && hardness <= 200) {
+        waterType = 'Moderately Hard Water';
+        waterImpact = 'Acceptable for irrigation.';
+        waterBadge = 'warn';
+      } else {
+        waterType = 'Very Hard Water';
+        waterImpact = 'Reduces crop yield and soil quality.';
+        waterRemedies = [
+          'Use rainwater harvesting for mixing.',
+          'Apply gypsum along with irrigation.',
+          'Add organic manure to improve soil structure.',
+          'Prefer drip irrigation to prevent salt stress.'
+        ];
+        waterBadge = 'danger';
+      }
+
+      // General suggestions
+      const generalSuggestions = [
+        'Test soil and water seasonally before major crop changes.',
+        'Use compost, vermicompost, cow dung, and green manure.',
+        'Rotate crops (Example: Legumes after cereals).'
+      ];
+
+      const soilBadge = badgeForPH(pH);
+      const cropGallery = buildCropGallery(suitableCrops);
+
+      // Build HTML
+      const html = `
+        <div class="card" aria-live="polite">
+          <div class="stat-grid">
+            <div class="stat-card">
+              <span>Soil pH</span>
+              <strong>${pH.toFixed(2)}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Calcium (mg/L)</span>
+              <strong>${Number(ca).toFixed(2)}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Magnesium (mg/L)</span>
+              <strong>${Number(mg).toFixed(2)}</strong>
+            </div>
+            <div class="stat-card">
+              <span>Water Hardness (ppm)</span>
+              <strong>${hardness.toFixed(2)}</strong>
+            </div>
+          </div>
+          
+          <div class="section">
+            <h3>
+              Soil Assessment
+              <span class="badge ${soilBadge.tone}">${soilBadge.label}</span>
+            </h3>
+            <p>${soilType}</p>
+            <div style="margin-top:12px">
+              <strong>Suitable Crops</strong>
+              ${toList(suitableCrops)}
+            </div>
+            ${soilRemedies.length ? `<div style="margin-top:12px"><strong>Soil Remedies</strong>${toList(soilRemedies)}</div>` : ''}
+            ${soilMaintenance.length ? `<div style="margin-top:12px"><strong>Soil Maintenance Tips</strong>${toList(soilMaintenance)}</div>` : ''}
+            ${cropGallery}
+          </div>
+
+          <hr>
+          <div class="section">
+            <h3>
+              Water Report
+              <span class="badge ${waterBadge}">${waterType}</span>
+            </h3>
+            <p>${waterImpact}</p>
+            ${waterRemedies.length ? `<div style="margin-top:12px"><strong>Mitigation</strong>${toList(waterRemedies)}</div>` : ''}
+          </div>
+
+          <hr>
+          <div class="section">
+            <h3>General Suggestions</h3>
+            ${toList(generalSuggestions)}
+          </div>
+        </div>
+      `;
+      return html;
+    }
+
+    runBtn.addEventListener('click', () => {
+      const pH = parseFloat(phInput.value);
+      const ca = parseFloat(caInput.value);
+      const mg = parseFloat(mgInput.value);
+
+      if (Number.isNaN(pH) || Number.isNaN(ca) || Number.isNaN(mg)) {
+        reportDiv.innerHTML = '<pre>Please enter valid numeric values for all fields.</pre>';
+        return;
+      }
+      if (pH < 0 || pH > 14) {
+        reportDiv.innerHTML = '<pre>pH must be between 0 and 14.</pre>';
+        return;
+      }
+
+      reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg);
+      reportDiv.scrollIntoView({behavior:'smooth'});
+    });
+
+    resetBtn.addEventListener('click', () => {
+      phInput.value = '';
+      caInput.value = '';
+      mgInput.value = '';
+      reportDiv.innerHTML = '';
+      phInput.focus();
+    });
+
+    const enforceDesktopView = () => {
+      if (!desktopNotice) return;
+      const shouldBlock = window.innerWidth < 1024;
+      desktopNotice.style.display = shouldBlock ? 'flex' : 'none';
+      document.body.classList.toggle('desktop-blocked', shouldBlock);
+    };
+
+    window.addEventListener('resize', enforceDesktopView);
+    retryViewBtn?.addEventListener('click', enforceDesktopView);
+
+    // optional: auto-run initial report
+    document.addEventListener('DOMContentLoaded', enforceDesktopView);
+  </script>
+</body>
+</html>
