@@ -43,6 +43,7 @@
 
   <div id="desktopNotice" class="desktop-notice" role="alert" aria-live="assertive">
     <div class="notice-card">
+      <button id="closeNotice" class="notice-close" aria-label="Close notice">×</button>
       <h2>Desktop Mode Required</h2>
       <p>This experience is optimized for desktop screens. Please open the page on a laptop/desktop or enable “Desktop site” in your mobile browser.</p>
       <button id="retryView" type="button">I enabled desktop mode</button>
@@ -380,13 +381,24 @@
 
     const enforceDesktopView = () => {
       if (!desktopNotice) return;
-      const shouldBlock = window.innerWidth < 1024;
+      const dismissed = localStorage.getItem('desktopNoticeDismissed') === '1';
+      const shouldBlock = !dismissed && window.innerWidth < 1024;
       desktopNotice.style.display = shouldBlock ? 'flex' : 'none';
       document.body.classList.toggle('desktop-blocked', shouldBlock);
     };
 
     window.addEventListener('resize', enforceDesktopView);
-    retryViewBtn?.addEventListener('click', enforceDesktopView);
+    retryViewBtn?.addEventListener('click', () => {
+      // user claims they enabled desktop mode — remember and hide
+      try{ localStorage.setItem('desktopNoticeDismissed','1'); }catch(e){}
+      enforceDesktopView();
+    });
+
+    const closeNoticeBtn = document.getElementById('closeNotice');
+    closeNoticeBtn?.addEventListener('click', () => {
+      try{ localStorage.setItem('desktopNoticeDismissed','1'); }catch(e){}
+      enforceDesktopView();
+    });
 
     // optional: auto-run initial report
     document.addEventListener('DOMContentLoaded', enforceDesktopView);

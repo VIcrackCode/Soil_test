@@ -48,6 +48,20 @@ body.desktop-blocked{
   margin:0 0 8px;
   font-size:20px;
 }
+.notice-close{
+  position:absolute;
+  top:10px;
+  right:10px;
+  border:none;
+  background:transparent;
+  font-size:20px;
+  line-height:1;
+  cursor:pointer;
+  color:var(--muted);
+  padding:6px;
+  border-radius:8px;
+}
+.notice-close:hover{ color:var(--text); background:rgba(15,23,42,0.04); }
 .notice-card p{
   margin:0 0 18px;
   color:var(--muted);
