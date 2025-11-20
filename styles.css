@@ -23,60 +23,6 @@ body{
   color:var(--text);
   padding:32px 20px 40px;
 }
-body.desktop-blocked{
-  overflow:hidden;
-}
-.desktop-notice{
-  position:fixed;
-  inset:0;
-  background:rgba(15,23,42,0.82);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:24px;
-  z-index:999;
-  text-align:center;
-}
-.notice-card{
-  max-width:380px;
-  background:#ffffff;
-  border-radius:24px;
-  padding:28px 24px 24px;
-  box-shadow:0 35px 60px -30px rgba(0,0,0,0.4);
-}
-.notice-card h2{
-  margin:0 0 8px;
-  font-size:20px;
-}
-.notice-close{
-  position:absolute;
-  top:10px;
-  right:10px;
-  border:none;
-  background:transparent;
-  font-size:20px;
-  line-height:1;
-  cursor:pointer;
-  color:var(--muted);
-  padding:6px;
-  border-radius:8px;
-}
-.notice-close:hover{ color:var(--text); background:rgba(15,23,42,0.04); }
-.notice-card p{
-  margin:0 0 18px;
-  color:var(--muted);
-  line-height:1.5;
-}
-.notice-card button{
-  border:none;
-  background:var(--accent);
-  color:#fff;
-  padding:12px 18px;
-  border-radius:999px;
-  font-weight:600;
-  cursor:pointer;
-  box-shadow:0 15px 30px -20px var(--accent);
-}
  .container{
    max-width:960px;
    margin:0 auto;
