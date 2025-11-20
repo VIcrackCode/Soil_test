@@ -41,15 +41,6 @@
     <p class="muted" style="margin-top:12px">This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.</p>
   </div>
 
-  <div id="desktopNotice" class="desktop-notice" role="alert" aria-live="assertive">
-    <div class="notice-card">
-      <button id="closeNotice" class="notice-close" aria-label="Close notice">×</button>
-      <h2>Desktop Mode Required</h2>
-      <p>This experience is optimized for desktop screens. Please open the page on a laptop/desktop or enable “Desktop site” in your mobile browser.</p>
-      <button id="retryView" type="button">I enabled desktop mode</button>
-    </div>
-  </div>
-
   <script>
     const runBtn = document.getElementById('runBtn');
     const resetBtn = document.getElementById('resetBtn');
@@ -57,8 +48,6 @@
     const caInput = document.getElementById('calcium');
     const mgInput = document.getElementById('magnesium');
     const reportDiv = document.getElementById('report');
-    const desktopNotice = document.getElementById('desktopNotice');
-    const retryViewBtn = document.getElementById('retryView');
 
     const toList = (items = []) => {
       if (!items.length) return '';
@@ -379,29 +368,9 @@
       phInput.focus();
     });
 
-    const enforceDesktopView = () => {
-      if (!desktopNotice) return;
-      const dismissed = localStorage.getItem('desktopNoticeDismissed') === '1';
-      const shouldBlock = !dismissed && window.innerWidth < 1024;
-      desktopNotice.style.display = shouldBlock ? 'flex' : 'none';
-      document.body.classList.toggle('desktop-blocked', shouldBlock);
-    };
-
-    window.addEventListener('resize', enforceDesktopView);
-    retryViewBtn?.addEventListener('click', () => {
-      // user claims they enabled desktop mode — remember and hide
-      try{ localStorage.setItem('desktopNoticeDismissed','1'); }catch(e){}
-      enforceDesktopView();
+    document.addEventListener('DOMContentLoaded', () => {
+      // ready state hook reserved for future enhancements
     });
-
-    const closeNoticeBtn = document.getElementById('closeNotice');
-    closeNoticeBtn?.addEventListener('click', () => {
-      try{ localStorage.setItem('desktopNoticeDismissed','1'); }catch(e){}
-      enforceDesktopView();
-    });
-
-    // optional: auto-run initial report
-    document.addEventListener('DOMContentLoaded', enforceDesktopView);
   </script>
 </body>
 </html>
