@@ -10,6 +10,18 @@
   <div class="container">
     <header>
       <h1>Soil Health and Crops Suggestions</h1>
+      <div class="utility-buttons">
+        <div class="translate-group">
+          <button id="translateBtn" class="utility-btn" title="Translate">
+            <span>🌐</span> Translate
+          </button>
+          <div id="translateMenu" class="translate-menu hidden">
+            <button class="lang-btn" data-lang="en">English</button>
+            <button class="lang-btn" data-lang="te">తెలుగు (Telugu)</button>
+            <button class="lang-btn" data-lang="hi">हिंदी (Hindi)</button>
+          </div>
+        </div>
+      </div>
     </header>
 
     <div class="card">
@@ -54,10 +66,17 @@
       return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
     };
 
-    const badgeForPH = (pH) => {
-      if (pH < 5.5) return {label:'Acidic', tone:'warn'};
-      if (pH <= 7) return {label:'Slightly acidic', tone:'success'};
-      return {label:'Alkaline', tone:'danger'};
+    const badgeForPH = (pH, lang = 'en') => {
+      let label = '';
+      if (pH < 5.5) label = 'Acidic';
+      else if (pH <= 7) label = 'Slightly acidic';
+      else label = 'Alkaline';
+      
+      return {
+        label: translateText(label, lang),
+        originalLabel: label,
+        tone: pH < 5.5 ? 'warn' : (pH <= 7 ? 'success' : 'danger')
+      };
     };
 
     const normalizeKey = (label = '') => label.toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -146,7 +165,7 @@
       });
     };
 
-    const buildCropGallery = (groups = []) => {
+    const buildCropGallery = (groups = [], lang = 'en') => {
       const names = extractCropNames(groups);
       const gallery = [];
       const seen = new Set();
@@ -156,30 +175,36 @@
         const src = cropImages[key];
         if (!src || seen.has(key)) continue;
         seen.add(key);
-        gallery.push({name, src});
+        gallery.push({name, src, originalName: name});
       }
 
       if (!gallery.length) return '';
 
+      // Translate crop names
+      const t = (text) => translateText(text, lang);
+      
       return `
         <div class="crop-gallery">
           <div class="section-heading">
-            <strong>Visual Guide</strong>
-            <span class="muted">Typical varieties for this soil</span>
+            <strong data-original="Visual Guide">${t('Visual Guide')}</strong>
+            <span class="muted" data-original="Typical varieties for this soil">${t('Typical varieties for this soil')}</span>
           </div>
           <div class="gallery-grid">
-            ${gallery.map(item => `
+            ${gallery.map(item => {
+              const translatedName = t(item.originalName);
+              return `
               <figure class="gallery-card">
-                <img src="${item.src}" alt="${item.name}" loading="lazy">
-                <figcaption>${item.name}</figcaption>
+                <img src="${item.src}" alt="${translatedName}" loading="lazy">
+                <figcaption data-original="${item.originalName}">${translatedName}</figcaption>
               </figure>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         </div>
       `;
     };
 
-    function classifySoilAndReport(pH, ca, mg) {
+    function classifySoilAndReport(pH, ca, mg, lang = 'en') {
       // hardness formula: hardness (ppm) = (Ca * 2.5) + (Mg * 4.1)
       const hardness = (Number(ca) * 2.5) + (Number(mg) * 4.1);
 
@@ -282,29 +307,40 @@
         'Rotate crops (Example: Legumes after cereals).'
       ];
 
-      const soilBadge = badgeForPH(pH);
-      const cropGallery = buildCropGallery(suitableCrops);
+      const soilBadge = badgeForPH(pH, lang);
+      const cropGallery = buildCropGallery(suitableCrops, lang);
+      
+      // Translate all text based on language
+      const t = (text) => translateText(text, lang);
 
+      // Translate arrays
+      const translateArray = (arr) => arr.map(item => t(item));
+      const translatedSuitableCrops = translateArray(suitableCrops);
+      const translatedSoilRemedies = soilRemedies.length ? translateArray(soilRemedies) : [];
+      const translatedSoilMaintenance = soilMaintenance.length ? translateArray(soilMaintenance) : [];
+      const translatedWaterRemedies = waterRemedies.length ? translateArray(waterRemedies) : [];
+      const translatedGeneralSuggestions = translateArray(generalSuggestions);
+      
       // Build HTML
       const html = `
         <div class="report-grid">
           <section class="info-card stat-card">
-            <h3>Soil Snapshot</h3>
+            <h3>${t('Soil Snapshot')}</h3>
             <div class="stat-grid">
               <div class="stat-chip">
-                <span>Soil pH</span>
+                <span>${t('Soil pH')}</span>
                 <strong>${pH.toFixed(2)}</strong>
               </div>
               <div class="stat-chip">
-                <span>Calcium (mg/L)</span>
+                <span>${t('Calcium (mg/L)')}</span>
                 <strong>${Number(ca).toFixed(2)}</strong>
               </div>
               <div class="stat-chip">
-                <span>Magnesium (mg/L)</span>
+                <span>${t('Magnesium (mg/L)')}</span>
                 <strong>${Number(mg).toFixed(2)}</strong>
               </div>
               <div class="stat-chip">
-                <span>Water Hardness (ppm)</span>
+                <span>${t('Water Hardness (ppm)')}</span>
                 <strong>${hardness.toFixed(2)}</strong>
               </div>
             </div>
@@ -312,43 +348,43 @@
 
           <section class="info-card soil-card">
             <header>
-              <h3>Soil Assessment</h3>
+              <h3>${t('Soil Assessment')}</h3>
               <span class="badge ${soilBadge.tone}">${soilBadge.label}</span>
             </header>
-            <p>${soilType}</p>
+            <p>${t(soilType)}</p>
           </section>
 
           <section class="info-card crops-card">
-            <h3>Suitable Crops</h3>
-            ${toList(suitableCrops)}
+            <h3>${t('Suitable Crops')}</h3>
+            ${toList(translatedSuitableCrops)}
           </section>
 
           ${soilRemedies.length ? `
             <section class="info-card remedies-card">
-              <h3>Soil Remedies</h3>
-              ${toList(soilRemedies)}
+              <h3>${t('Soil Remedies')}</h3>
+              ${toList(translatedSoilRemedies)}
             </section>
           ` : ''}
 
           ${soilMaintenance.length ? `
             <section class="info-card maintenance-card">
-              <h3>Soil Maintenance Tips</h3>
-              ${toList(soilMaintenance)}
+              <h3>${t('Soil Maintenance Tips')}</h3>
+              ${toList(translatedSoilMaintenance)}
             </section>
           ` : ''}
 
           <section class="info-card water-card">
             <header>
-              <h3>Water Report</h3>
-              <span class="badge ${waterBadge}">${waterType}</span>
+              <h3>${t('Water Report')}</h3>
+              <span class="badge ${waterBadge}">${t(waterType)}</span>
             </header>
-            <p>${waterImpact}</p>
-            ${waterRemedies.length ? `<div class="sub-list"><strong>Mitigation</strong>${toList(waterRemedies)}</div>` : ''}
+            <p>${t(waterImpact)}</p>
+            ${waterRemedies.length ? `<div class="sub-list"><strong>${t('Mitigation')}</strong>${toList(translatedWaterRemedies)}</div>` : ''}
           </section>
 
           <section class="info-card suggestions-card">
-            <h3>General Suggestions</h3>
-            ${toList(generalSuggestions)}
+            <h3>${t('General Suggestions')}</h3>
+            ${toList(translatedGeneralSuggestions)}
           </section>
 
           ${cropGallery ? `
@@ -367,15 +403,21 @@
       const mg = parseFloat(mgInput.value);
 
       if (Number.isNaN(pH) || Number.isNaN(ca) || Number.isNaN(mg)) {
-        reportDiv.innerHTML = '<pre>Please enter valid numeric values for all fields.</pre>';
+        const errorMsg = currentLang === 'te' ? 'దయచేసి అన్ని ఫీల్డ్‌లకు చెల్లుబాటు అయ్యే సంఖ్యా విలువలను నమోదు చేయండి.' : 
+                        currentLang === 'hi' ? 'कृपया सभी फ़ील्ड के लिए वैध संख्यात्मक मान दर्ज करें।' :
+                        'Please enter valid numeric values for all fields.';
+        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
         return;
       }
       if (pH < 0 || pH > 14) {
-        reportDiv.innerHTML = '<pre>pH must be between 0 and 14.</pre>';
+        const errorMsg = currentLang === 'te' ? 'pH 0 మరియు 14 మధ్య ఉండాలి.' : 
+                        currentLang === 'hi' ? 'pH 0 और 14 के बीच होना चाहिए।' :
+                        'pH must be between 0 and 14.';
+        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
         return;
       }
 
-      reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg);
+      reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg, currentLang);
       reportDiv.scrollIntoView({behavior:'smooth'});
     });
 
@@ -387,8 +429,452 @@
       phInput.focus();
     });
 
+    // Translation dictionaries - stored in code for permanent availability
+    const translations = {
+      te: {
+        // UI Elements
+        'Soil Health and Crops Suggestions': 'నేల ఆరోగ్యం మరియు పంటల సూచనలు',
+        'Translate': 'అనువాదం',
+        'Enter Soil pH value': 'నేల pH విలువను నమోదు చేయండి',
+        'Enter Calcium ion concentration (mg/L)': 'కాల్షియం అయాన్ సాంద్రత (mg/L) నమోదు చేయండి',
+        'Enter Magnesium ion concentration (mg/L)': 'మెగ్నీషియం అయాన్ సాంద్రత (mg/L) నమోదు చేయండి',
+        'Generate Report': 'రిపోర్ట్ సృష్టించండి',
+        'Reset': 'రీసెట్',
+        'This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.': 'ఈ సాధనం ప్రాథమిక మార్గదర్శకత్వం కోసం. ఖచ్చితమైన వ్యవసాయ సిఫార్సుల కోసం నేల ప్రయోగశాల పరీక్షలు నిర్వహించండి మరియు స్థానిక వ్యవసాయ శాస్త్రవేత్తలను సంప్రదించండి.',
+        
+        // Report Sections
+        'Soil Snapshot': 'నేల స్నాప్షాట్',
+        'Soil pH': 'నేల pH',
+        'Calcium (mg/L)': 'కాల్షియం (mg/L)',
+        'Magnesium (mg/L)': 'మెగ్నీషియం (mg/L)',
+        'Water Hardness (ppm)': 'నీటి కాఠిన్యం (ppm)',
+        'Soil Assessment': 'నేల అంచనా',
+        'Suitable Crops': 'అనుకూలమైన పంటలు',
+        'Soil Remedies': 'నేల పరిష్కారాలు',
+        'Soil Maintenance Tips': 'నేల నిర్వహణ చిట్కాలు',
+        'Water Report': 'నీటి నివేదిక',
+        'General Suggestions': 'సాధారణ సూచనలు',
+        'Visual Guide': 'దృశ్య మార్గదర్శకం',
+        'Typical varieties for this soil': 'ఈ నేలకు సాధారణ రకాలు',
+        'Mitigation': 'తగ్గింపు',
+        
+        // Badge Labels
+        'Acidic': 'ఆమ్ల',
+        'Slightly acidic': 'కొంచెం ఆమ్ల',
+        'Alkaline': 'క్షార',
+        'Soft Water': 'మృదువైన నీరు',
+        'Moderately Hard Water': 'మధ్యస్థ కఠినమైన నీరు',
+        'Very Hard Water': 'చాలా కఠినమైన నీరు',
+        
+        // Soil Types
+        'Strongly Acidic Soil (pH < 5.5)': 'గట్టి ఆమ్ల నేల (pH < 5.5)',
+        'Slightly Acidic to Near Neutral Soil (pH 5.5 - 7.0)': 'కొంచెం ఆమ్ల నుండి తటస్థ నేల (pH 5.5 - 7.0)',
+        'Neutral to Slightly Alkaline Soil (pH 7.0 - 8.2)': 'తటస్థ నుండి కొంచెం క్షార నేల (pH 7.0 - 8.2)',
+        'Alkaline / Sodic Soil (pH > 8.2)': 'క్షార / సోడిక్ నేల (pH > 8.2)',
+        
+        // Water Impacts
+        'Safe for irrigation.': 'నీటిపారుదలకు సురక్షితం.',
+        'Acceptable for irrigation.': 'నీటిపారుదలకు ఆమోదయోగ్యం.',
+        'Reduces crop yield and soil quality.': 'పంట దిగుబడి మరియు నేల నాణ్యతను తగ్గిస్తుంది.',
+        
+        // Crop Categories
+        'Cereals/Oilseeds:': 'ధాన్యాలు/నూనెగింజలు:',
+        'Pulses:': 'పప్పులు:',
+        'Fruits:': 'పండ్లు:',
+        'Vegetables:': 'కూరగాయలు:',
+        'Commercial Spices:': 'వాణిజ్య మసాలాలు:',
+        'Commercial/Spices:': 'వాణిజ్య/మసాలాలు:',
+        'Commercial Crops:': 'వాణిజ్య పంటలు:',
+        'Flowers:': 'పువ్వులు:',
+        
+        // Crop Names
+        'Paddy': 'వరి',
+        'Oat': 'ఓట్స్',
+        'Buckwheat': 'కుట్టు',
+        'Rye': 'రై',
+        'Groundnut': 'వేరుశనగ',
+        'Chickpea': 'శనగ',
+        'Citrus': 'సిట్రస్',
+        'Gooseberry': 'ఉసిరి',
+        'Strawberry': 'స్ట్రాబెర్రీ',
+        'Passion fruit': 'పాషన్ ఫ్రూట్',
+        'Pineapple': 'అనాస',
+        'Radish': 'ముల్లంగి',
+        'Sweet Potato': 'చిలకడదుంప',
+        'Potato': 'బంగాళాదుంప',
+        'Brinjal': 'వంకాయ',
+        'Tea': 'టీ',
+        'Chilli': 'మిర్చి',
+        'Coriander': 'కొత్తిమీర',
+        'Rose': 'గులాబీ',
+        'Barley': 'బార్లీ',
+        'Wheat': 'గోధుమ',
+        'Corn': 'మొక్కజొన్న',
+        'Maize': 'మొక్కజొన్న',
+        'Soybean': 'సోయాబీన్',
+        'Sunflower': 'పొద్దుతిరుగుడు',
+        'Linseed': 'అవిసె',
+        'Sesame': 'నువ్వులు',
+        'Lentil': 'మసూర్',
+        'Rice bean': 'రైస్ బీన్',
+        'Cowpea': 'బొబ్బర్లు',
+        'Mungbean': 'పెసర',
+        'Pigeon pea': 'కంది',
+        'Rajma': 'రాజ్మా',
+        'Peach': 'పీచ్',
+        'Watermelon': 'పుచ్చకాయ',
+        'Apple': 'ఆపిల్',
+        'Papaya': 'బొప్పాయి',
+        'Guava': 'జామ',
+        'Litchi': 'లిచ్చి',
+        'Kiwi': 'కివి',
+        'Mango': 'మామిడి',
+        'Plum': 'ప్లమ్',
+        'Beans': 'బీన్స్',
+        'Broccoli': 'బ్రోకోలీ',
+        'Cabbage': 'క్యాబేజీ',
+        'Carrot': 'క్యారెట్',
+        'Cucumber': 'దోసకాయ',
+        'Tomato': 'టమాటో',
+        'Onion': 'ఉల్లిపాయ',
+        'Cauliflower': 'ఫ్లవర్',
+        'Bitter Gourd': 'కాకరకాయ',
+        'Pumpkin': 'గుమ్మడికాయ',
+        'Colocasia': 'చేమదుంప',
+        'Sugarcane': 'చెరకు',
+        'Garlic': 'వెల్లుల్లి',
+        'Ginger': 'అల్లం',
+        'Chrysanthemum': 'చామంతి',
+        'Marigold': 'బంతి',
+        'Sorghum': 'జొన్న',
+        'Cotton': 'పత్తి',
+        'Millets': 'చిన్న ధాన్యాలు',
+        'Mustard': 'ఆవాలు',
+        'Rapeseed': 'రేప్సీడ్',
+        'Pea': 'బటాణి',
+        'Banana': 'అరటి',
+        'Jackfruit': 'పనస',
+        'Bottle Gourd': 'సొరకాయ',
+        'Ridge Gourd': 'బీరకాయ',
+        'Knolkhol': 'నవల్ కోల్',
+        'Garden Pea': 'గార్డెన్ పీ',
+        'Okra': 'బెండకాయ',
+        'Dahlia': 'డాలియా',
+        'Jasmine': 'మల్లి',
+        'Gerbera': 'గెర్బెరా',
+        'Tobacco': 'పొగాకు',
+        'Capsicum': 'బెల్ పెప్పర్',
+        'Beetroot': 'బీట్రూట్',
+        
+        // Remedies and Maintenance
+        'Apply agricultural lime (CaCO₃) at recommended doses.': 'సిఫార్సు చేసిన మోతాదులలో వ్యవసాయ సున్నం (CaCO₃) వర్తింపజేయండి.',
+        'Add Dolomite powder to increase Calcium & Magnesium.': 'కాల్షియం మరియు మెగ్నీషియంను పెంచడానికి డోలోమైట్ పౌడర్ జోడించండి.',
+        'Incorporate wood ash and well decomposed compost.': 'చెక్క బూడిద మరియు బాగా కుళ్ళిన కంపోస్ట్‌ను చేర్చండి.',
+        'Maintain compost and farmyard manure.': 'కంపోస్ట్ మరియు పొలం ఎరువును నిర్వహించండి.',
+        'Reduce chemical fertilizers.': 'రసాయన ఎరువులను తగ్గించండి.',
+        'Practice crop rotation.': 'పంట భ్రమణాన్ని అభ్యసించండి.',
+        'Add organic matter routinely to improve soil aggregates.': 'నేల సమ్మేళనాలను మెరుగుపరచడానికి క్రమం తప్పకుండా సేంద్రియ పదార్థాన్ని జోడించండి.',
+        'Ensure adequate drainage to prevent salt build-up.': 'ఉప్పు పేరుకుపోవడాన్ని నిరోధించడానికి తగిన నీటి వ్యవస్థను నిర్ధారించండి.',
+        'Use balanced fertilization with micronutrient sprays.': 'సూక్ష్మ పోషకాల స్ప్రేలతో సమతుల్య ఎరువు వర్తింపజేయండి.',
+        'Apply Gypsum to replace sodium with calcium and reduce alkalinity.': 'సోడియంను కాల్షియంతో భర్తీ చేయడానికి మరియు క్షారతను తగ్గించడానికి జిప్సమ్ వర్తింపజేయండి.',
+        'Mix organic matter like cow dung compost or green manure.': 'ఆవు పేడ కంపోస్ట్ లేదా ఆకుపచ్చ ఎరువు వంటి సేంద్రియ పదార్థాన్ని కలపండి.',
+        'Use drip or sprinkler irrigation to avoid salt accumulation.': 'ఉప్పు పేరుకుపోవడాన్ని నివారించడానికి డ్రిప్ లేదా స్ప్రింక్లర్ నీటిపారుదలను ఉపయోగించండి.',
+        'Apply Elemental Sulfur gradually to reduce pH.': 'pHని తగ్గించడానికి క్రమంగా మూలక సల్ఫర్ వర్తింపజేయండి.',
+        'Use rainwater harvesting for mixing.': 'మిక్సింగ్ కోసం వర్షపు నీటి సేకరణను ఉపయోగించండి.',
+        'Apply gypsum along with irrigation.': 'నీటిపారుదలతో పాటు జిప్సమ్ వర్తింపజేయండి.',
+        'Add organic manure to improve soil structure.': 'నేల నిర్మాణాన్ని మెరుగుపరచడానికి సేంద్రియ ఎరువు జోడించండి.',
+        'Prefer drip irrigation to prevent salt stress.': 'ఉప్పు ఒత్తిడిని నివారించడానికి డ్రిప్ నీటిపారుదలను ప్రాధాన్యత ఇవ్వండి.',
+        'Test soil and water seasonally before major crop changes.': 'ప్రధాన పంట మార్పులకు ముందు కాలానుగుణంగా నేల మరియు నీటిని పరీక్షించండి.',
+        'Use compost, vermicompost, cow dung, and green manure.': 'కంపోస్ట్, వెర్మికంపోస్ట్, ఆవు పేడ మరియు ఆకుపచ్చ ఎరువును ఉపయోగించండి.',
+        'Rotate crops (Example: Legumes after cereals).': 'పంటలను తిప్పండి (ఉదాహరణ: ధాన్యాల తర్వాత పప్పులు).'
+      },
+      hi: {
+        // UI Elements
+        'Soil Health and Crops Suggestions': 'मृदा स्वास्थ्य और फसल सुझाव',
+        'Translate': 'अनुवाद',
+        'Enter Soil pH value': 'मृदा pH मान दर्ज करें',
+        'Enter Calcium ion concentration (mg/L)': 'कैल्शियम आयन सांद्रता (mg/L) दर्ज करें',
+        'Enter Magnesium ion concentration (mg/L)': 'मैग्नीशियम आयन सांद्रता (mg/L) दर्ज करें',
+        'Generate Report': 'रिपोर्ट जेनरेट करें',
+        'Reset': 'रीसेट',
+        'This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.': 'यह उपकरण बुनियादी मार्गदर्शन के लिए है। सटीक कृषि सिफारिशों के लिए मृदा प्रयोगशाला परीक्षण चलाएं और स्थानीय कृषि वैज्ञानिकों से परामर्श लें।',
+        
+        // Report Sections
+        'Soil Snapshot': 'मृदा स्नैपशॉट',
+        'Soil pH': 'मृदा pH',
+        'Calcium (mg/L)': 'कैल्शियम (mg/L)',
+        'Magnesium (mg/L)': 'मैग्नीशियम (mg/L)',
+        'Water Hardness (ppm)': 'जल कठोरता (ppm)',
+        'Soil Assessment': 'मृदा मूल्यांकन',
+        'Suitable Crops': 'उपयुक्त फसलें',
+        'Soil Remedies': 'मृदा उपचार',
+        'Soil Maintenance Tips': 'मृदा रखरखाव सुझाव',
+        'Water Report': 'जल रिपोर्ट',
+        'General Suggestions': 'सामान्य सुझाव',
+        'Visual Guide': 'दृश्य मार्गदर्शक',
+        'Typical varieties for this soil': 'इस मृदा के लिए विशिष्ट किस्में',
+        'Mitigation': 'शमन',
+        
+        // Badge Labels
+        'Acidic': 'अम्लीय',
+        'Slightly acidic': 'थोड़ा अम्लीय',
+        'Alkaline': 'क्षारीय',
+        'Soft Water': 'मृदु जल',
+        'Moderately Hard Water': 'मध्यम कठोर जल',
+        'Very Hard Water': 'बहुत कठोर जल',
+        
+        // Soil Types
+        'Strongly Acidic Soil (pH < 5.5)': 'तीव्र अम्लीय मृदा (pH < 5.5)',
+        'Slightly Acidic to Near Neutral Soil (pH 5.5 - 7.0)': 'थोड़ा अम्लीय से लगभग तटस्थ मृदा (pH 5.5 - 7.0)',
+        'Neutral to Slightly Alkaline Soil (pH 7.0 - 8.2)': 'तटस्थ से थोड़ा क्षारीय मृदा (pH 7.0 - 8.2)',
+        'Alkaline / Sodic Soil (pH > 8.2)': 'क्षारीय / सोडिक मृदा (pH > 8.2)',
+        
+        // Water Impacts
+        'Safe for irrigation.': 'सिंचाई के लिए सुरक्षित।',
+        'Acceptable for irrigation.': 'सिंचाई के लिए स्वीकार्य।',
+        'Reduces crop yield and soil quality.': 'फसल उत्पादन और मृदा गुणवत्ता को कम करता है।',
+        
+        // Crop Categories
+        'Cereals/Oilseeds:': 'अनाज/तिलहन:',
+        'Pulses:': 'दालें:',
+        'Fruits:': 'फल:',
+        'Vegetables:': 'सब्जियां:',
+        'Commercial Spices:': 'व्यावसायिक मसाले:',
+        'Commercial/Spices:': 'व्यावसायिक/मसाले:',
+        'Commercial Crops:': 'व्यावसायिक फसलें:',
+        'Flowers:': 'फूल:',
+        
+        // Crop Names
+        'Paddy': 'धान',
+        'Oat': 'जई',
+        'Buckwheat': 'कुट्टू',
+        'Rye': 'राई',
+        'Groundnut': 'मूंगफली',
+        'Chickpea': 'चना',
+        'Citrus': 'सिट्रस',
+        'Gooseberry': 'आंवला',
+        'Strawberry': 'स्ट्रॉबेरी',
+        'Passion fruit': 'पैशन फ्रूट',
+        'Pineapple': 'अनानास',
+        'Radish': 'मूली',
+        'Sweet Potato': 'शकरकंद',
+        'Potato': 'आलू',
+        'Brinjal': 'बैंगन',
+        'Tea': 'चाय',
+        'Chilli': 'मिर्च',
+        'Coriander': 'धनिया',
+        'Rose': 'गुलाब',
+        'Barley': 'जौ',
+        'Wheat': 'गेहूं',
+        'Corn': 'मक्का',
+        'Maize': 'मक्का',
+        'Soybean': 'सोयाबीन',
+        'Sunflower': 'सूरजमुखी',
+        'Linseed': 'अलसी',
+        'Sesame': 'तिल',
+        'Lentil': 'मसूर',
+        'Rice bean': 'राइस बीन',
+        'Cowpea': 'लोबिया',
+        'Mungbean': 'मूंग',
+        'Pigeon pea': 'अरहर',
+        'Rajma': 'राजमा',
+        'Peach': 'आड़ू',
+        'Watermelon': 'तरबूज',
+        'Apple': 'सेब',
+        'Papaya': 'पपीता',
+        'Guava': 'अमरूद',
+        'Litchi': 'लीची',
+        'Kiwi': 'कीवी',
+        'Mango': 'आम',
+        'Plum': 'आलूबुखारा',
+        'Beans': 'बीन्स',
+        'Broccoli': 'ब्रोकली',
+        'Cabbage': 'पत्तागोभी',
+        'Carrot': 'गाजर',
+        'Cucumber': 'खीरा',
+        'Tomato': 'टमाटर',
+        'Onion': 'प्याज',
+        'Cauliflower': 'फूलगोभी',
+        'Bitter Gourd': 'करेला',
+        'Pumpkin': 'कद्दू',
+        'Colocasia': 'अरबी',
+        'Sugarcane': 'गन्ना',
+        'Garlic': 'लहसुन',
+        'Ginger': 'अदरक',
+        'Chrysanthemum': 'गुलदाउदी',
+        'Marigold': 'गेंदा',
+        'Sorghum': 'ज्वार',
+        'Cotton': 'कपास',
+        'Millets': 'मोटे अनाज',
+        'Mustard': 'सरसों',
+        'Rapeseed': 'रैपसीड',
+        'Pea': 'मटर',
+        'Banana': 'केला',
+        'Jackfruit': 'कटहल',
+        'Bottle Gourd': 'लौकी',
+        'Ridge Gourd': 'तोरी',
+        'Knolkhol': 'नवल कोल',
+        'Garden Pea': 'गार्डन पी',
+        'Okra': 'भिंडी',
+        'Dahlia': 'डाहलिया',
+        'Jasmine': 'चमेली',
+        'Gerbera': 'गेरबेरा',
+        'Tobacco': 'तम्बाकू',
+        'Capsicum': 'शिमला मिर्च',
+        'Beetroot': 'चुकंदर',
+        
+        // Remedies and Maintenance
+        'Apply agricultural lime (CaCO₃) at recommended doses.': 'अनुशंसित खुराक में कृषि चूना (CaCO₃) लगाएं।',
+        'Add Dolomite powder to increase Calcium & Magnesium.': 'कैल्शियम और मैग्नीशियम बढ़ाने के लिए डोलोमाइट पाउडर मिलाएं।',
+        'Incorporate wood ash and well decomposed compost.': 'लकड़ी की राख और अच्छी तरह से विघटित कम्पोस्ट मिलाएं।',
+        'Maintain compost and farmyard manure.': 'कम्पोस्ट और खेत की खाद बनाए रखें।',
+        'Reduce chemical fertilizers.': 'रासायनिक उर्वरक कम करें।',
+        'Practice crop rotation.': 'फसल चक्र अपनाएं।',
+        'Add organic matter routinely to improve soil aggregates.': 'मृदा समुच्चय में सुधार के लिए नियमित रूप से कार्बनिक पदार्थ मिलाएं।',
+        'Ensure adequate drainage to prevent salt build-up.': 'नमक जमाव को रोकने के लिए पर्याप्त जल निकासी सुनिश्चित करें।',
+        'Use balanced fertilization with micronutrient sprays.': 'सूक्ष्म पोषक तत्व स्प्रे के साथ संतुलित उर्वरक का उपयोग करें।',
+        'Apply Gypsum to replace sodium with calcium and reduce alkalinity.': 'सोडियम को कैल्शियम से बदलने और क्षारीयता कम करने के लिए जिप्सम लगाएं।',
+        'Mix organic matter like cow dung compost or green manure.': 'गोबर खाद या हरी खाद जैसे कार्बनिक पदार्थ मिलाएं।',
+        'Use drip or sprinkler irrigation to avoid salt accumulation.': 'नमक जमाव से बचने के लिए ड्रिप या स्प्रिंकलर सिंचाई का उपयोग करें।',
+        'Apply Elemental Sulfur gradually to reduce pH.': 'pH कम करने के लिए धीरे-धीरे तत्व सल्फर लगाएं।',
+        'Use rainwater harvesting for mixing.': 'मिश्रण के लिए वर्षा जल संचयन का उपयोग करें।',
+        'Apply gypsum along with irrigation.': 'सिंचाई के साथ जिप्सम लगाएं।',
+        'Add organic manure to improve soil structure.': 'मृदा संरचना में सुधार के लिए कार्बनिक खाद मिलाएं।',
+        'Prefer drip irrigation to prevent salt stress.': 'नमक तनाव को रोकने के लिए ड्रिप सिंचाई पसंद करें।',
+        'Test soil and water seasonally before major crop changes.': 'प्रमुख फसल परिवर्तनों से पहले मौसमी रूप से मृदा और जल का परीक्षण करें।',
+        'Use compost, vermicompost, cow dung, and green manure.': 'कम्पोस्ट, वर्मीकम्पोस्ट, गोबर और हरी खाद का उपयोग करें।',
+        'Rotate crops (Example: Legumes after cereals).': 'फसल चक्र अपनाएं (उदाहरण: अनाज के बाद दालें)।'
+      }
+    };
+
+    // Translation functionality
+    let currentLang = 'en';
+    const translateBtn = document.getElementById('translateBtn');
+    const translateMenu = document.getElementById('translateMenu');
+    const langButtons = document.querySelectorAll('.lang-btn');
+
+    // Translate text using stored dictionaries
+    const translateText = (text, targetLang) => {
+      if (targetLang === 'en') return text;
+      const dict = translations[targetLang];
+      if (!dict) return text;
+      
+      // Try exact match first
+      if (dict[text]) return dict[text];
+      
+      // For crop lists, translate category and individual crop names
+      // Format: "Category: Crop1, Crop2, Crop3"
+      if (text.includes(':')) {
+        const parts = text.split(':');
+        if (parts.length === 2) {
+          const category = parts[0].trim();
+          const crops = parts[1].trim();
+          
+          // Translate category
+          const translatedCategory = dict[category] || category;
+          
+          // Translate individual crop names
+          const cropList = crops.split(',').map(crop => {
+            const cropName = crop.trim();
+            return dict[cropName] || cropName;
+          }).join(', ');
+          
+          return `${translatedCategory}: ${cropList}`;
+        }
+      }
+      
+      // Try to translate parts of the text (for other cases)
+      let translated = text;
+      for (const [key, value] of Object.entries(dict)) {
+        if (text.includes(key)) {
+          // Use word boundaries to avoid partial matches
+          const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
+          translated = translated.replace(regex, value);
+        }
+      }
+      
+      return translated;
+    };
+
+    // Translate page content
+    const translatePage = (lang) => {
+      if (lang === currentLang && lang === 'en') return;
+      currentLang = lang;
+
+      const elements = document.querySelectorAll('h1, label, button:not(.lang-btn), .info-card h3, .info-card p, .info-card li, .stat-chip span, .gallery-card figcaption, .muted, .section-heading strong, .section-heading .muted, .crop-gallery .section-heading strong, .crop-gallery .section-heading .muted');
+      
+      for (const el of elements) {
+        const originalText = el.textContent.trim();
+        if (!originalText) continue;
+        
+        // Store original if not stored
+        if (!el.dataset.original) {
+          el.dataset.original = originalText;
+        }
+        
+        if (lang !== 'en') {
+          // Translate using dictionary
+          const translated = translateText(el.dataset.original, lang);
+          el.textContent = translated;
+        } else {
+          // Restore original
+          el.textContent = el.dataset.original;
+        }
+      }
+
+      // Update active button
+      langButtons.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.lang === lang);
+      });
+      
+      // If report exists, regenerate it with new language
+      if (reportDiv.innerHTML && reportDiv.innerHTML.trim() && reportDiv.innerHTML.includes('report-grid')) {
+        const pH = parseFloat(phInput.value);
+        const ca = parseFloat(caInput.value);
+        const mg = parseFloat(mgInput.value);
+        if (!Number.isNaN(pH) && !Number.isNaN(ca) && !Number.isNaN(mg)) {
+          reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg, lang);
+        }
+      }
+    };
+
+    // Toggle translate menu
+    translateBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      translateMenu.classList.toggle('hidden');
+    });
+
+    // Close menu when clicking outside
+    document.addEventListener('click', (e) => {
+      if (!translateMenu.contains(e.target) && !translateBtn.contains(e.target)) {
+        translateMenu.classList.add('hidden');
+      }
+    });
+
+    // Language selection
+    langButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const lang = btn.dataset.lang;
+        translatePage(lang);
+        translateMenu.classList.add('hidden');
+      });
+    });
+
+
+    // Store original texts on page load
     document.addEventListener('DOMContentLoaded', () => {
-      // ready state hook reserved for future enhancements
+      // Set English as active by default
+      langButtons.forEach(btn => {
+        if (btn.dataset.lang === 'en') btn.classList.add('active');
+      });
+      
+      // Store original texts for all elements
+      const allElements = document.querySelectorAll('h1, label, button:not(.lang-btn), .muted');
+      allElements.forEach(el => {
+        if (el.textContent && el.textContent.trim()) {
+          el.dataset.original = el.textContent.trim();
+        }
+      });
     });
   </script>
 </body>
