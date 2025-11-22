@@ -34,6 +34,73 @@ body{
    justify-content:space-between;
    gap:16px;
    margin-bottom:20px;
+   flex-wrap:wrap;
+ }
+ .utility-buttons{
+   display:flex;
+   gap:10px;
+   align-items:center;
+ }
+ .utility-btn{
+   display:flex;
+   align-items:center;
+   gap:6px;
+   padding:8px 14px;
+   border:1px solid var(--border);
+   border-radius:8px;
+   background:var(--card);
+   color:var(--text);
+   font-size:13px;
+   font-weight:600;
+   cursor:pointer;
+   transition:all 0.2s;
+ }
+ .utility-btn:hover{
+   background:var(--accent-soft);
+   border-color:var(--accent);
+   transform:translateY(-1px);
+ }
+ .utility-btn span{
+   font-size:16px;
+ }
+ .translate-group{
+   position:relative;
+ }
+ .translate-menu{
+   position:absolute;
+   top:100%;
+   right:0;
+   margin-top:8px;
+   background:var(--card);
+   border:1px solid var(--border);
+   border-radius:8px;
+   box-shadow:0 8px 24px rgba(0,0,0,0.15);
+   padding:6px;
+   z-index:100;
+   min-width:180px;
+ }
+ .translate-menu.hidden{
+   display:none;
+ }
+ .lang-btn{
+   display:block;
+   width:100%;
+   padding:10px 12px;
+   border:none;
+   background:transparent;
+   color:var(--text);
+   font-size:14px;
+   text-align:left;
+   cursor:pointer;
+   border-radius:6px;
+   transition:background 0.2s;
+ }
+ .lang-btn:hover{
+   background:var(--accent-soft);
+ }
+ .lang-btn.active{
+   background:var(--accent);
+   color:#fff;
  }
  h1{
    font-size:24px;
@@ -300,5 +367,22 @@ button{
  @media (max-width:520px){
    body{padding:24px 16px}
    .actions{flex-direction:column}
+   header{
+     flex-direction:column;
+     align-items:flex-start;
+   }
+   .utility-buttons{
+     width:100%;
+     justify-content:flex-start;
+     margin-top:12px;
+   }
+   .utility-btn{
+     font-size:12px;
+     padding:6px 12px;
+   }
+   .translate-menu{
+     right:auto;
+     left:0;
+   }
  }
 
