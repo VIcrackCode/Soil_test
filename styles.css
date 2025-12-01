@@ -11,10 +11,13 @@
   --danger:#dc2626;
 }
 
-/* ----------- GLOBAL BODY (MERGED) ----------- */
+/* ----------- GLOBAL BODY ----------- */
+*{box-sizing:border-box}
+
 body{
   margin:0;
-  overflow:hidden; /* Prevent scroll during animation */
+  overflow-x:hidden;       /* prevent horizontal scroll */
+  /* vertical scroll is allowed by default */
   font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   background-image:url("background_img/land.jpg");
   background-size:cover;
@@ -29,13 +32,13 @@ body{
 
 /* ----------- THUMBNAIL SPLASH ANIMATION ----------- */
 
-/* Fullscreen container */
+/* Fullscreen container stays fixed, doesn't block clicks/scroll */
 .thumbnail-container {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  pointer-events: none;
+  pointer-events: none;   /* VERY important: no blocking */
   z-index: 9999;
 }
 
@@ -46,10 +49,10 @@ body{
   object-fit: cover;
   transform-origin: top left;
   border-radius: 0;
-  animation: shrinkToChromeProfile 2s forwards ease-in-out;
+  animation: shrinkToChromeProfile 3s forwards ease-in-out;
 }
 
-/* Keyframes for Chrome-style profile picture */
+/* Desktop / default keyframes */
 @keyframes shrinkToChromeProfile {
   0% {
     width: 100vw;
@@ -62,7 +65,7 @@ body{
     width: 64px;             /* Chrome-like size */
     height: 64px;
     border-radius: 50%;      /* Circle */
-    transform: translate(calc(100vw - 720px), 10px);
+    transform: translate(calc(100vw - 100px), 20px);
     /* 64px + 20px margin */
     border: 3px solid #ffffff;
     box-shadow: 0 4px 18px rgba(0,0,0,0.28);
@@ -70,9 +73,7 @@ body{
   }
 }
 
-/* ----------- PAGE CONTENT AFTER ANIMATION ----------- */
-
-*{box-sizing:border-box}
+/* ----------- PAGE CONTENT ----------- */
 
 .container{
   max-width:960px;
@@ -319,6 +320,8 @@ button:active{
   font-size:12px;
   color:#2f4c3d;
   letter-spacing:0.03em;
+  text-transform:uppercase;
+  margin-bottom:4px;
 }
 
 .stat-chip strong{
@@ -478,24 +481,60 @@ pre{
   font-size:14px;
 }
 
+/* ----------- MOBILE TWEAKS (≤ 520px) ----------- */
 @media (max-width:520px){
-  body{padding:24px 16px}
-  .actions{flex-direction:column}
+
+  body{
+    padding:24px 16px;
+  }
+
+  .actions{
+    flex-direction:column;
+  }
+
   header{
     flex-direction:column;
     align-items:flex-start;
   }
+
   .utility-buttons{
     width:100%;
     justify-content:flex-start;
     margin-top:12px;
   }
+
   .utility-btn{
     font-size:12px;
     padding:6px 12px;
   }
+
   .translate-menu{
     right:auto;
     left:0;
+  }
+
+  /* smaller Chrome-style profile pic on mobile */
+  .thumbnail{
+    animation: shrinkToChromeProfileMobile 3s forwards ease-in-out;
+  }
+
+  @keyframes shrinkToChromeProfileMobile {
+    0% {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0;
+      transform: translate(0,0);
+      box-shadow: none;
+    }
+    100% {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      transform: translate(calc(100vw - 80px), 24px);
+      /* 52px + 20px margin */
+      border: 3px solid #ffffff;
+      box-shadow: 0 3px 14px rgba(0,0,0,0.26);
+      object-fit: cover;
+    }
   }
 }
