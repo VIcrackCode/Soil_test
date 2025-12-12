@@ -7,56 +7,65 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-<div class="thumbnail-container">
-    <img src="thumbnail/thumbnail.png" class="thumbnail">
-</div>
+  <!-- RESPONSIVE THUMBNAIL -->
+  <div class="thumbnail-container" aria-hidden="true">
+    <picture>
+      <source media="(max-width:520px)" srcset="thumbnail/thumbnail_for_mobile.png">
+      <img src="thumbnail/thumbnail.png" class="thumbnail" alt="page thumbnail">
+    </picture>
+  </div>
+
   <div class="container">
     <header>
-      <h1>Soil Health and Crops Suggestions</h1>
+      <h1 data-i18n="Soil Health and Crops Suggestions">Soil Health and Crops Suggestions</h1>
       <div class="utility-buttons">
-        <div class="translate-group">
-          <button id="translateBtn" class="utility-btn" title="Translate">
-            <span>🌐</span> Translate
-          </button>
-          <div id="translateMenu" class="translate-menu hidden">
-            <button class="lang-btn" data-lang="en">English</button>
-            <button class="lang-btn" data-lang="te">తెలుగు (Telugu)</button>
-            <button class="lang-btn" data-lang="hi">हिंदी (Hindi)</button>
-          </div>
-        </div>
+        <!-- kept empty; translate moved into actions row -->
       </div>
     </header>
 
     <div class="card">
       <form id="analysisForm" onsubmit="return false;">
         <div>
-          <label for="ph">Enter Soil pH value</label>
-          <input id="ph" type="number" step="0.1" min="0" max="14" placeholder="e.g. 6.5" required>
+          <label for="ph" data-i18n="Enter Soil pH value">Enter Soil pH value</label>
+          <input id="ph" type="number" step="0.1" min="0" max="14" placeholder="e.g. 6.5" data-placeholder-i18n="e.g. 6.5" required>
         </div>
 
         <div>
-          <label for="calcium">Enter Calcium ion concentration (mg/L)</label>
-          <input id="calcium" type="number" step="0.1" min="0" placeholder="mg/L" required>
+          <label for="calcium" data-i18n="Enter Calcium ion concentration (mg/L)">Enter Calcium ion concentration (mg/L)</label>
+          <input id="calcium" type="number" step="0.1" min="0" placeholder="mg/L" data-placeholder-i18n="mg/L" required>
         </div>
 
         <div>
-          <label for="magnesium">Enter Magnesium ion concentration (mg/L)</label>
-          <input id="magnesium" type="number" step="0.1" min="0" placeholder="mg/L" required>
+          <label for="magnesium" data-i18n="Enter Magnesium ion concentration (mg/L)">Enter Magnesium ion concentration (mg/L)</label>
+          <input id="magnesium" type="number" step="0.1" min="0" placeholder="mg/L" data-placeholder-i18n="mg/L" required>
         </div>
 
         <div class="actions">
-          <button id="runBtn" type="button">Generate Report</button>
-          <button id="resetBtn" type="button">Reset</button>
+          <button id="runBtn" type="button" data-i18n="Generate Report">Generate Report</button>
+          <button id="resetBtn" type="button" data-i18n="Reset">Reset</button>
+
+          <!-- TRANSLATE BUTTON NOW INLINE WITH ACTIONS -->
+          <div class="translate-group" aria-haspopup="true">
+            <button id="translateBtn" class="utility-btn" title="Translate" type="button" data-i18n="Translate">
+              <span>🌐</span> Translate
+            </button>
+            <div id="translateMenu" class="translate-menu hidden" role="menu" aria-hidden="true">
+              <button class="lang-btn" data-lang="en" role="menuitem">English</button>
+              <button class="lang-btn" data-lang="te" role="menuitem">తెలుగు (Telugu)</button>
+              <button class="lang-btn" data-lang="hi" role="menuitem">हिंदी (Hindi)</button>
+            </div>
+          </div>
         </div>
       </form>
 
       <div id="report" class="report" aria-live="polite"></div>
     </div>
 
-    <p class="muted" style="margin-top:12px">This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.</p>
+    <p class="muted" data-i18n="This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.">This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.</p>
   </div>
 
   <script>
+    // DOM refs
     const runBtn = document.getElementById('runBtn');
     const resetBtn = document.getElementById('resetBtn');
     const phInput = document.getElementById('ph');
@@ -64,375 +73,11 @@
     const mgInput = document.getElementById('magnesium');
     const reportDiv = document.getElementById('report');
 
-    const toList = (items = []) => {
-      if (!items.length) return '';
-      return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
-    };
+    const translateBtn = document.getElementById('translateBtn');
+    const translateMenu = document.getElementById('translateMenu');
+    const langButtons = document.querySelectorAll('.lang-btn');
 
-    const badgeForPH = (pH, lang = 'en') => {
-      let label = '';
-      if (pH < 5.5) label = 'Acidic';
-      else if (pH <= 7) label = 'Slightly acidic';
-      else label = 'Alkaline';
-      
-      return {
-        label: translateText(label, lang),
-        originalLabel: label,
-        tone: pH < 5.5 ? 'warn' : (pH <= 7 ? 'success' : 'danger')
-      };
-    };
-
-    const normalizeKey = (label = '') => label.toLowerCase().replace(/[^a-z0-9]/g,'');
-
-    const cropImages = {};
-    const addImage = (names, path) => {
-      names.forEach(name => {
-        cropImages[normalizeKey(name)] = path;
-      });
-    };
-
-    addImage(['Apple'], 'pictures/apple.jpg');
-    addImage(['Banana'], 'pictures/banana.jpg');
-    addImage(['Barley'], 'pictures/barley.jpg');
-    addImage(['Beans'], 'pictures/beans.jpg');
-    addImage(['Bitter Gourd','Bittergourd'], 'pictures/bitter_gourd.jpg');
-    addImage(['Bottle Gourd','Bottlegourd'], 'pictures/bottle_gourd.jpg');
-    addImage(['Brinjal','Eggplant','Egg Plant'], 'pictures/brinjal_eggplant.jpg');
-    addImage(['Broccoli'], 'pictures/broccoli.jpg');
-    addImage(['Buckwheat'], 'pictures/buckwheat.jpg');
-    addImage(['Cabbage'], 'pictures/cabbage.jpg');
-    addImage(['Carrot'], 'pictures/carrot.jpg');
-    addImage(['Cauliflower'], 'pictures/cauliflower.jpg');
-    addImage(['Chickpea','Chick Pea'], 'pictures/chickpeas.jpg');
-    addImage(['Chilli','Chili'], 'pictures/chilli.jpg');
-    addImage(['Chrysanthemum'], 'pictures/chrysanthemum.jpg');
-    addImage(['Citrus'], 'pictures/citrus.jpg');
-    addImage(['Colocasia'], 'pictures/colocasia.jpg');
-    addImage(['Corn','Maize'], 'pictures/corn.jpg');
-    addImage(['Cowpea','Cow Pea'], 'pictures/cowpea.jpg');
-    addImage(['Cucumber'], 'pictures/cucumber.jpg');
-    addImage(['Dahlia'], 'pictures/dahlia.jpg');
-    addImage(['Garden Pea','Gardenpea'], 'pictures/gardenpea.jpg');
-    addImage(['Garlic'], 'pictures/garlic.jpg');
-    addImage(['Ginger'], 'pictures/ginger.jpg');
-    addImage(['Gooseberry','Gooseberry (Amla)','Amla'], 'pictures/gooseberry');
-    addImage(['Groundnut','Peanut'], 'pictures/peanut.jpg');
-    addImage(['Guava'], 'pictures/guava.jpg');
-    addImage(['Jackfruit','Jack fruit'], 'pictures/jackfruit.jpg');
-    addImage(['Kiwi'], 'pictures/kiwi.jpg');
-    addImage(['Knolkhol','Kohlrabi'], 'pictures/knolkhol.jpg');
-    addImage(['Lentil'], 'pictures/lentil.jpg');
-    addImage(['Linseed','Flaxseed'], 'pictures/linseed.jpg');
-    addImage(['Litchi','Lychee'], 'pictures/litchi.jpg');
-    addImage(['Mango'], 'pictures/mango.jpg');
-    addImage(['Marigold'], 'pictures/marigold.jpg');
-    addImage(['Millets'], 'pictures/millets');
-    addImage(['Mungbean','Mung bean','Green Gram','Greengram'], 'pictures/mungbean');
-    addImage(['Mustard'], 'pictures/mustard');
-    addImage(['Oat','Oats'], 'pictures/oats.jpg');
-    addImage(['Okra','Ladyfinger','Lady Finger'], 'pictures/okra.jpg');
-    addImage(['Onion'], 'pictures/onion.jpg');
-    addImage(['Papaya'], 'pictures/papaya.jpg');
-    addImage(['Passionfruit','Passion fruit'], 'pictures/passionfruit.jpg');
-    addImage(['Pea','Peas'], 'pictures/pea.jpg');
-    addImage(['Peach'], 'pictures/peach.jpg');
-    addImage(['Pigeon Pea','Pigeonpea','Arhar'], 'pictures/pigeonpeas.jpg');
-    addImage(['Pineapple'], 'pictures/pineapple.jpg');
-    addImage(['Plum'], 'pictures/plum.jpg');
-    addImage(['Potato'], 'pictures/potato.jpg');
-    addImage(['Pumpkin'], 'pictures/pumpkin.jpg');
-    addImage(['Radish'], 'pictures/raddish.jpg');
-    addImage(['Rajma','Kidney Bean','Kidney Beans'], 'pictures/rajma.jpg');
-    addImage(['Rapeseed'], 'pictures/rapeseed.jpg');
-    addImage(['Ridge Gourd','Ridgegourd'], 'pictures/ridgegourd.jpg');
-    addImage(['Rose'], 'pictures/rose.jpg');
-    addImage(['Rye'], 'pictures/rye.jpg');
-    addImage(['Sesame','Til'], 'pictures/sesame.jpg');
-    addImage(['Soybean','Soyabean'], 'pictures/soyabean.jpg');
-    addImage(['Strawberry'], 'pictures/strawberry.jpg');
-    addImage(['Sugarcane'], 'pictures/sugarcane.jpg');
-    addImage(['Sunflower'], 'pictures/sunflower.jpg');
-    addImage(['Sweet Potato'], 'pictures/sweetpotato.jpg');
-    addImage(['Tea','Tea Plant'], 'pictures/teaplant.jpg');
-    addImage(['Tomato'], 'pictures/tomato.jpg');
-    addImage(['Watermelon'], 'pictures/watermelon.jpg');
-    addImage(['Wheat'], 'pictures/wheat.jpg');
-
-    const extractCropNames = (groups = []) => {
-      return groups.flatMap(group => {
-        if (!group.includes(':')) return [];
-        const list = group.split(':').slice(1).join(':');
-        return list.split(',')
-          .map(item => item.replace(/\(.*?\)/g,'').trim())
-          .filter(Boolean);
-      });
-    };
-
-    const buildCropGallery = (groups = [], lang = 'en') => {
-      const names = extractCropNames(groups);
-      const gallery = [];
-      const seen = new Set();
-
-      for (const name of names) {
-        const key = normalizeKey(name);
-        const src = cropImages[key];
-        if (!src || seen.has(key)) continue;
-        seen.add(key);
-        gallery.push({name, src, originalName: name});
-      }
-
-      if (!gallery.length) return '';
-
-      // Translate crop names
-      const t = (text) => translateText(text, lang);
-      
-      return `
-        <div class="crop-gallery">
-          <div class="section-heading">
-            <strong data-original="Visual Guide">${t('Visual Guide')}</strong>
-            <span class="muted" data-original="Typical varieties for this soil">${t('Typical varieties for this soil')}</span>
-          </div>
-          <div class="gallery-grid">
-            ${gallery.map(item => {
-              const translatedName = t(item.originalName);
-              return `
-              <figure class="gallery-card">
-                <img src="${item.src}" alt="${translatedName}" loading="lazy">
-                <figcaption data-original="${item.originalName}">${translatedName}</figcaption>
-              </figure>
-            `;
-            }).join('')}
-          </div>
-        </div>
-      `;
-    };
-
-    function classifySoilAndReport(pH, ca, mg, lang = 'en') {
-      // hardness formula: hardness (ppm) = (Ca * 2.5) + (Mg * 4.1)
-      const hardness = (Number(ca) * 2.5) + (Number(mg) * 4.1);
-
-      let soilType = '';
-      let suitableCrops = [];
-      let soilRemedies = [];
-      let soilMaintenance = [];
-
-      if (pH < 5.5) {
-        soilType = 'Strongly Acidic Soil (pH < 5.5)';
-        suitableCrops = [
-          'Cereals/Oilseeds: Paddy, Oat, Buckwheat, Rye, Groundnut',
-          'Pulses: Chickpea',
-          'Fruits: Citrus, Gooseberry, Strawberry, Passion fruit, Pineapple',
-          'Vegetables: Radish, Sweet Potato, Potato, Brinjal',
-          'Commercial Spices: Tea, Chilli, Coriander',
-          'Flowers: Rose'
-        ];
-        soilRemedies = [
-          'Apply agricultural lime (CaCO₃) at recommended doses.',
-          'Add Dolomite powder to increase Calcium & Magnesium.',
-          'Incorporate wood ash and well decomposed compost.'
-        ];
-      } else if (pH >= 5.5 && pH < 7.0) {
-        soilType = 'Slightly Acidic to Near Neutral Soil (pH 5.5 - 7.0)';
-        suitableCrops = [
-          'Cereals/Oilseeds: Barley, Wheat, Corn, Maize, Soybean, Sunflower, Linseed, Sesame',
-          'Pulses: Lentil, Rice bean, Cowpea, Mungbean, Pigeon pea, Rajma',
-          'Fruits: Peach, Watermelon, Apple, Papaya, Guava, Litchi, Kiwi, Mango, Plum',
-          'Vegetables: Beans, Broccoli, Cabbage, Carrot, Cucumber, Tomato, Onion, Cauliflower, Bitter Gourd, Pumpkin',
-          'Commercial/Spices: Colocasia, Sugarcane, Onion, Garlic, Ginger',
-          'Flowers: Chrysanthemum, Marigold'
-        ];
-        soilMaintenance = [
-          'Maintain compost and farmyard manure.',
-          'Reduce chemical fertilizers.',
-          'Practice crop rotation.'
-        ];
-      } else if (pH >= 7.0 && pH <= 8.2) {
-        soilType = 'Neutral to Slightly Alkaline Soil (pH 7.0 - 8.2)';
-        suitableCrops = [
-          'Cereals/Oilseeds: Wheat, Barley, Sorghum, Corn, Cotton',
-          'Pulses: Chickpea, Lentil, Pigeon pea, Cowpea',
-          'Fruits: Banana, Mango, Grapes, Guava, Sapota, Papaya',
-          'Vegetables: Tomato, Cabbage, Capsicum, Beetroot, Onion, Garlic',
-          'Commercial Crops: Sugarcane, Tobacco, Cotton',
-          'Flowers: Marigold, Jasmine, Gerbera'
-        ];
-        soilMaintenance = [
-          'Add organic matter routinely to improve soil aggregates.',
-          'Ensure adequate drainage to prevent salt build-up.',
-          'Use balanced fertilization with micronutrient sprays.'
-        ];
-      } else {
-        soilType = 'Alkaline / Sodic Soil (pH > 8.2)';
-        suitableCrops = [
-          'Cereals/Oilseeds: Millets, Mustard, Rapeseed',
-          'Pulses: Pea',
-          'Fruits: Banana, Jackfruit',
-          'Vegetables: Bottle Gourd, Ridge Gourd, Knolkhol, Garden Pea, Okra',
-          'Flowers: Dahlia'
-        ];
-        soilRemedies = [
-          'Apply Gypsum to replace sodium with calcium and reduce alkalinity.',
-          'Mix organic matter like cow dung compost or green manure.',
-          'Use drip or sprinkler irrigation to avoid salt accumulation.',
-          'Apply Elemental Sulfur gradually to reduce pH.'
-        ];
-      }
-
-      // Water hardness classification
-      let waterType = '';
-      let waterImpact = '';
-      let waterRemedies = [];
-      let waterBadge = 'success';
-
-      if (hardness < 75) {
-        waterType = 'Soft Water';
-        waterImpact = 'Safe for irrigation.';
-      } else if (hardness >= 75 && hardness <= 200) {
-        waterType = 'Moderately Hard Water';
-        waterImpact = 'Acceptable for irrigation.';
-        waterBadge = 'warn';
-      } else {
-        waterType = 'Very Hard Water';
-        waterImpact = 'Reduces crop yield and soil quality.';
-        waterRemedies = [
-          'Use rainwater harvesting for mixing.',
-          'Apply gypsum along with irrigation.',
-          'Add organic manure to improve soil structure.',
-          'Prefer drip irrigation to prevent salt stress.'
-        ];
-        waterBadge = 'danger';
-      }
-
-      // General suggestions
-      const generalSuggestions = [
-        'Test soil and water seasonally before major crop changes.',
-        'Use compost, vermicompost, cow dung, and green manure.',
-        'Rotate crops (Example: Legumes after cereals).'
-      ];
-
-      const soilBadge = badgeForPH(pH, lang);
-      const cropGallery = buildCropGallery(suitableCrops, lang);
-      
-      // Translate all text based on language
-      const t = (text) => translateText(text, lang);
-
-      // Translate arrays
-      const translateArray = (arr) => arr.map(item => t(item));
-      const translatedSuitableCrops = translateArray(suitableCrops);
-      const translatedSoilRemedies = soilRemedies.length ? translateArray(soilRemedies) : [];
-      const translatedSoilMaintenance = soilMaintenance.length ? translateArray(soilMaintenance) : [];
-      const translatedWaterRemedies = waterRemedies.length ? translateArray(waterRemedies) : [];
-      const translatedGeneralSuggestions = translateArray(generalSuggestions);
-      
-      // Build HTML
-      const html = `
-        <div class="report-grid">
-          <section class="info-card stat-card">
-            <h3>${t('Soil Snapshot')}</h3>
-            <div class="stat-grid">
-              <div class="stat-chip">
-                <span>${t('Soil pH')}</span>
-                <strong>${pH.toFixed(2)}</strong>
-              </div>
-              <div class="stat-chip">
-                <span>${t('Calcium (mg/L)')}</span>
-                <strong>${Number(ca).toFixed(2)}</strong>
-              </div>
-              <div class="stat-chip">
-                <span>${t('Magnesium (mg/L)')}</span>
-                <strong>${Number(mg).toFixed(2)}</strong>
-              </div>
-              <div class="stat-chip">
-                <span>${t('Water Hardness (ppm)')}</span>
-                <strong>${hardness.toFixed(2)}</strong>
-              </div>
-            </div>
-          </section>
-
-          <section class="info-card soil-card">
-            <header>
-              <h3>${t('Soil Assessment')}</h3>
-              <span class="badge ${soilBadge.tone}">${soilBadge.label}</span>
-            </header>
-            <p>${t(soilType)}</p>
-          </section>
-
-          <section class="info-card crops-card">
-            <h3>${t('Suitable Crops')}</h3>
-            ${toList(translatedSuitableCrops)}
-          </section>
-
-          ${soilRemedies.length ? `
-            <section class="info-card remedies-card">
-              <h3>${t('Soil Remedies')}</h3>
-              ${toList(translatedSoilRemedies)}
-            </section>
-          ` : ''}
-
-          ${soilMaintenance.length ? `
-            <section class="info-card maintenance-card">
-              <h3>${t('Soil Maintenance Tips')}</h3>
-              ${toList(translatedSoilMaintenance)}
-            </section>
-          ` : ''}
-
-          <section class="info-card water-card">
-            <header>
-              <h3>${t('Water Report')}</h3>
-              <span class="badge ${waterBadge}">${t(waterType)}</span>
-            </header>
-            <p>${t(waterImpact)}</p>
-            ${waterRemedies.length ? `<div class="sub-list"><strong>${t('Mitigation')}</strong>${toList(translatedWaterRemedies)}</div>` : ''}
-          </section>
-
-          <section class="info-card suggestions-card">
-            <h3>${t('General Suggestions')}</h3>
-            ${toList(translatedGeneralSuggestions)}
-          </section>
-
-          ${cropGallery ? `
-            <section class="info-card visual-guide-card">
-              ${cropGallery}
-            </section>
-          ` : ''}
-        </div>
-      `;
-      return html;
-    }
-
-    runBtn.addEventListener('click', () => {
-      const pH = parseFloat(phInput.value);
-      const ca = parseFloat(caInput.value);
-      const mg = parseFloat(mgInput.value);
-
-      if (Number.isNaN(pH) || Number.isNaN(ca) || Number.isNaN(mg)) {
-        const errorMsg = currentLang === 'te' ? 'దయచేసి అన్ని ఫీల్డ్‌లకు చెల్లుబాటు అయ్యే సంఖ్యా విలువలను నమోదు చేయండి.' : 
-                        currentLang === 'hi' ? 'कृपया सभी फ़ील्ड के लिए वैध संख्यात्मक मान दर्ज करें।' :
-                        'Please enter valid numeric values for all fields.';
-        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
-        return;
-      }
-      if (pH < 0 || pH > 14) {
-        const errorMsg = currentLang === 'te' ? 'pH 0 మరియు 14 మధ్య ఉండాలి.' : 
-                        currentLang === 'hi' ? 'pH 0 और 14 के बीच होना चाहिए।' :
-                        'pH must be between 0 and 14.';
-        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
-        return;
-      }
-
-      reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg, currentLang);
-      reportDiv.scrollIntoView({behavior:'smooth'});
-    });
-
-    resetBtn.addEventListener('click', () => {
-      phInput.value = '';
-      caInput.value = '';
-      mgInput.value = '';
-      reportDiv.innerHTML = '';
-      phInput.focus();
-    });
-
-    // Translation dictionaries - stored in code for permanent availability
+    // Translation dictionaries (FULL — copy exactly)
     const translations = {
       te: {
         // UI Elements
@@ -444,6 +89,8 @@
         'Generate Report': 'రిపోర్ట్ సృష్టించండి',
         'Reset': 'రీసెట్',
         'This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.': 'ఈ సాధనం ప్రాథమిక మార్గదర్శకత్వం కోసం. ఖచ్చితమైన వ్యవసాయ సిఫార్సుల కోసం నేల ప్రయోగశాల పరీక్షలు నిర్వహించండి మరియు స్థానిక వ్యవసాయ శాస్త్రవేత్తలను సంప్రదించండి.',
+        'e.g. 6.5': 'ఉదా. 6.5',
+        'mg/L': 'mg/L',
         
         // Report Sections
         'Soil Snapshot': 'నేల స్నాప్షాట్',
@@ -566,7 +213,7 @@
         'Jasmine': 'మల్లి',
         'Gerbera': 'గెర్బెరా',
         'Tobacco': 'పొగాకు',
-        'Capsicum': 'బెల్ పెప్పర్',
+        'Capsicum': 'బెల్ 페ప్పర్',
         'Beetroot': 'బీట్రూట్',
         
         // Remedies and Maintenance
@@ -601,6 +248,8 @@
         'Generate Report': 'रिपोर्ट जेनरेट करें',
         'Reset': 'रीसेट',
         'This tool is for basic guidance. For precise agronomic recommendations run soil lab tests and consult local agronomists.': 'यह उपकरण बुनियादी मार्गदर्शन के लिए है। सटीक कृषि सिफारिशों के लिए मृदा प्रयोगशाला परीक्षण चलाएं और स्थानीय कृषि वैज्ञानिकों से परामर्श लें।',
+        'e.g. 6.5': 'उदा. 6.5',
+        'mg/L': 'mg/L',
         
         // Report Sections
         'Soil Snapshot': 'मृदा स्नैपशॉट',
@@ -750,87 +399,408 @@
       }
     };
 
-    // Translation functionality
-    let currentLang = 'en';
-    const translateBtn = document.getElementById('translateBtn');
-    const translateMenu = document.getElementById('translateMenu');
-    const langButtons = document.querySelectorAll('.lang-btn');
-
-    // Translate text using stored dictionaries
-    const translateText = (text, targetLang) => {
-      if (targetLang === 'en') return text;
-      const dict = translations[targetLang];
-      if (!dict) return text;
-      
-      // Try exact match first
-      if (dict[text]) return dict[text];
-      
-      // For crop lists, translate category and individual crop names
-      // Format: "Category: Crop1, Crop2, Crop3"
-      if (text.includes(':')) {
-        const parts = text.split(':');
-        if (parts.length === 2) {
-          const category = parts[0].trim();
-          const crops = parts[1].trim();
-          
-          // Translate category
-          const translatedCategory = dict[category] || category;
-          
-          // Translate individual crop names
-          const cropList = crops.split(',').map(crop => {
-            const cropName = crop.trim();
-            return dict[cropName] || cropName;
-          }).join(', ');
-          
-          return `${translatedCategory}: ${cropList}`;
-        }
-      }
-      
-      // Try to translate parts of the text (for other cases)
-      let translated = text;
-      for (const [key, value] of Object.entries(dict)) {
-        if (text.includes(key)) {
-          // Use word boundaries to avoid partial matches
-          const regex = new RegExp(`\\b${key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'g');
-          translated = translated.replace(regex, value);
-        }
-      }
-      
-      return translated;
+    // helpers
+    const toList = (items = []) => {
+      if (!items.length) return '';
+      return `<ul>${items.map(item => `<li>${item}</li>`).join('')}</ul>`;
     };
 
-    // Translate page content
-    const translatePage = (lang) => {
-      if (lang === currentLang && lang === 'en') return;
-      currentLang = lang;
+    const normalizeKey = (label = '') => label.toLowerCase().replace(/[^a-z0-9]/g,'');
 
-      const elements = document.querySelectorAll('h1, label, button:not(.lang-btn), .info-card h3, .info-card p, .info-card li, .stat-chip span, .gallery-card figcaption, .muted, .section-heading strong, .section-heading .muted, .crop-gallery .section-heading strong, .crop-gallery .section-heading .muted');
+    // image map (unchanged)
+    const cropImages = {};
+    const addImage = (names, path) => names.forEach(n => cropImages[normalizeKey(n)] = path);
+
+    addImage(['Apple'], 'pictures/apple.jpg');
+    addImage(['Banana'], 'pictures/banana.jpg');
+    addImage(['Barley'], 'pictures/barley.jpg');
+    addImage(['Beans'], 'pictures/beans.jpg');
+    addImage(['Bitter Gourd','Bittergourd'], 'pictures/bitter_gourd.jpg');
+    addImage(['Bottle Gourd','Bottlegourd'], 'pictures/bottle_gourd.jpg');
+    addImage(['Brinjal','Eggplant','Egg Plant'], 'pictures/brinjal_eggplant.jpg');
+    addImage(['Broccoli'], 'pictures/broccoli.jpg');
+    addImage(['Buckwheat'], 'pictures/buckwheat.jpg');
+    addImage(['Cabbage'], 'pictures/cabbage.jpg');
+    addImage(['Carrot'], 'pictures/carrot.jpg');
+    addImage(['Cauliflower'], 'pictures/cauliflower.jpg');
+    addImage(['Chickpea','Chick Pea'], 'pictures/chickpeas.jpg');
+    addImage(['Chilli','Chili'], 'pictures/chilli.jpg');
+    addImage(['Chrysanthemum'], 'pictures/chrysanthemum.jpg');
+    addImage(['Citrus'], 'pictures/citrus.jpg');
+    addImage(['Colocasia'], 'pictures/colocasia.jpg');
+    addImage(['Corn','Maize'], 'pictures/corn.jpg');
+    addImage(['Cowpea','Cow Pea'], 'pictures/cowpea.jpg');
+    addImage(['Cucumber'], 'pictures/cucumber.jpg');
+    addImage(['Dahlia'], 'pictures/dahlia.jpg');
+    addImage(['Garden Pea','Gardenpea'], 'pictures/gardenpea.jpg');
+    addImage(['Garlic'], 'pictures/garlic.jpg');
+    addImage(['Ginger'], 'pictures/ginger.jpg');
+    addImage(['Gooseberry','Gooseberry (Amla)','Amla'], 'pictures/gooseberry');
+    addImage(['Groundnut','Peanut'], 'pictures/peanut.jpg');
+    addImage(['Guava'], 'pictures/guava.jpg');
+    addImage(['Jackfruit','Jack fruit'], 'pictures/jackfruit.jpg');
+    addImage(['Kiwi'], 'pictures/kiwi.jpg');
+    addImage(['Knolkhol','Kohlrabi'], 'pictures/knolkhol.jpg');
+    addImage(['Lentil'], 'pictures/lentil.jpg');
+    addImage(['Linseed','Flaxseed'], 'pictures/linseed.jpg');
+    addImage(['Litchi','Lychee'], 'pictures/litchi.jpg');
+    addImage(['Mango'], 'pictures/mango.jpg');
+    addImage(['Marigold'], 'pictures/marigold.jpg');
+    addImage(['Millets'], 'pictures/millets');
+    addImage(['Mungbean','Mung bean','Green Gram','Greengram'], 'pictures/mungbean');
+    addImage(['Mustard'], 'pictures/mustard');
+    addImage(['Oat','Oats'], 'pictures/oats.jpg');
+    addImage(['Okra','Ladyfinger','Lady Finger'], 'pictures/okra.jpg');
+    addImage(['Onion'], 'pictures/onion.jpg');
+    addImage(['Papaya'], 'pictures/papaya.jpg');
+    addImage(['Passionfruit','Passion fruit'], 'pictures/passionfruit.jpg');
+    addImage(['Pea','Peas'], 'pictures/pea.jpg');
+    addImage(['Peach'], 'pictures/peach.jpg');
+    addImage(['Pigeon Pea','Pigeonpea','Arhar'], 'pictures/pigeonpeas.jpg');
+    addImage(['Pineapple'], 'pictures/pineapple.jpg');
+    addImage(['Plum'], 'pictures/plum.jpg');
+    addImage(['Potato'], 'pictures/potato.jpg');
+    addImage(['Pumpkin'], 'pictures/pumpkin.jpg');
+    addImage(['Radish'], 'pictures/raddish.jpg');
+    addImage(['Rajma','Kidney Bean','Kidney Beans'], 'pictures/rajma.jpg');
+    addImage(['Rapeseed'], 'pictures/rapeseed.jpg');
+    addImage(['Ridge Gourd','Ridgegourd'], 'pictures/ridgegourd.jpg');
+    addImage(['Rose'], 'pictures/rose.jpg');
+    addImage(['Rye'], 'pictures/rye.jpg');
+    addImage(['Sesame','Til'], 'pictures/sesame.jpg');
+    addImage(['Soybean','Soyabean'], 'pictures/soyabean.jpg');
+    addImage(['Strawberry'], 'pictures/strawberry.jpg');
+    addImage(['Sugarcane'], 'pictures/sugarcane.jpg');
+    addImage(['Sunflower'], 'pictures/sunflower.jpg');
+    addImage(['Sweet Potato'], 'pictures/sweetpotato.jpg');
+    addImage(['Tea','Tea Plant'], 'pictures/teaplant.jpg');
+    addImage(['Tomato'], 'pictures/tomato.jpg');
+    addImage(['Watermelon'], 'pictures/watermelon.jpg');
+    addImage(['Wheat'], 'pictures/wheat.jpg');
+
+    const extractCropNames = (groups = []) => {
+      return groups.flatMap(group => {
+        if (!group.includes(':')) return [];
+        const list = group.split(':').slice(1).join(':');
+        return list.split(',')
+          .map(item => item.replace(/\(.*?\)/g,'').trim())
+          .filter(Boolean);
+      });
+    };
+
+    const buildCropGallery = (groups = [], lang = 'en') => {
+      const names = extractCropNames(groups);
+      const gallery = [];
+      const seen = new Set();
+
+      for (const name of names) {
+        const key = normalizeKey(name);
+        const src = cropImages[key];
+        if (!src || seen.has(key)) continue;
+        seen.add(key);
+        gallery.push({name, src, originalName: name});
+      }
+
+      if (!gallery.length) return '';
+
+      const t = (text) => translateText(text, lang);
       
-      for (const el of elements) {
-        const originalText = el.textContent.trim();
-        if (!originalText) continue;
-        
-        // Store original if not stored
-        if (!el.dataset.original) {
-          el.dataset.original = originalText;
-        }
-        
-        if (lang !== 'en') {
-          // Translate using dictionary
-          const translated = translateText(el.dataset.original, lang);
-          el.textContent = translated;
-        } else {
-          // Restore original
-          el.textContent = el.dataset.original;
+      return `
+        <div class="crop-gallery">
+          <div class="section-heading">
+            <strong data-original="Visual Guide">${t('Visual Guide')}</strong>
+            <span class="muted" data-original="Typical varieties for this soil">${t('Typical varieties for this soil')}</span>
+          </div>
+          <div class="gallery-grid">
+            ${gallery.map(item => {
+              const translatedName = t(item.originalName);
+              return `
+              <figure class="gallery-card">
+                <img src="${item.src}" alt="${translatedName}" loading="lazy">
+                <figcaption data-original="${item.originalName}">${translatedName}</figcaption>
+              </figure>
+            `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    };
+
+    const badgeForPH = (pH, lang = 'en') => {
+      let label = '';
+      if (pH < 5.5) label = 'Acidic';
+      else if (pH <= 7) label = 'Slightly acidic';
+      else label = 'Alkaline';
+      
+      return {
+        label: translateText(label, lang),
+        originalLabel: label,
+        tone: pH < 5.5 ? 'warn' : (pH <= 7 ? 'success' : 'danger')
+      };
+    };
+
+    function classifySoilAndReport(pH, ca, mg, lang = 'en') {
+      const hardness = (Number(ca) * 2.5) + (Number(mg) * 4.1);
+
+      let soilType = '';
+      let suitableCrops = [];
+      let soilRemedies = [];
+      let soilMaintenance = [];
+
+      if (pH < 5.5) {
+        soilType = 'Strongly Acidic Soil (pH < 5.5)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Paddy, Oat, Buckwheat, Rye, Groundnut',
+          'Pulses: Chickpea',
+          'Fruits: Citrus, Gooseberry, Strawberry, Passion fruit, Pineapple',
+          'Vegetables: Radish, Sweet Potato, Potato, Brinjal',
+          'Commercial Spices: Tea, Chilli, Coriander',
+          'Flowers: Rose'
+        ];
+        soilRemedies = [
+          'Apply agricultural lime (CaCO₃) at recommended doses.',
+          'Add Dolomite powder to increase Calcium & Magnesium.',
+          'Incorporate wood ash and well decomposed compost.'
+        ];
+      } else if (pH >= 5.5 && pH < 7.0) {
+        soilType = 'Slightly Acidic to Near Neutral Soil (pH 5.5 - 7.0)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Barley, Wheat, Corn, Maize, Soybean, Sunflower, Linseed, Sesame',
+          'Pulses: Lentil, Rice bean, Cowpea, Mungbean, Pigeon pea, Rajma',
+          'Fruits: Peach, Watermelon, Apple, Papaya, Guava, Litchi, Kiwi, Mango, Plum',
+          'Vegetables: Beans, Broccoli, Cabbage, Carrot, Cucumber, Tomato, Onion, Cauliflower, Bitter Gourd, Pumpkin',
+          'Commercial/Spices: Colocasia, Sugarcane, Onion, Garlic, Ginger',
+          'Flowers: Chrysanthemum, Marigold'
+        ];
+        soilMaintenance = [
+          'Maintain compost and farmyard manure.',
+          'Reduce chemical fertilizers.',
+          'Practice crop rotation.'
+        ];
+      } else if (pH >= 7.0 && pH <= 8.2) {
+        soilType = 'Neutral to Slightly Alkaline Soil (pH 7.0 - 8.2)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Wheat, Barley, Sorghum, Corn, Cotton',
+          'Pulses: Chickpea, Lentil, Pigeon pea, Cowpea',
+          'Fruits: Banana, Mango, Grapes, Guava, Sapota, Papaya',
+          'Vegetables: Tomato, Cabbage, Capsicum, Beetroot, Onion, Garlic',
+          'Commercial Crops: Sugarcane, Tobacco, Cotton',
+          'Flowers: Marigold, Jasmine, Gerbera'
+        ];
+        soilMaintenance = [
+          'Add organic matter routinely to improve soil aggregates.',
+          'Ensure adequate drainage to prevent salt build-up.',
+          'Use balanced fertilization with micronutrient sprays.'
+        ];
+      } else {
+        soilType = 'Alkaline / Sodic Soil (pH > 8.2)';
+        suitableCrops = [
+          'Cereals/Oilseeds: Millets, Mustard, Rapeseed',
+          'Pulses: Pea',
+          'Fruits: Banana, Jackfruit',
+          'Vegetables: Bottle Gourd, Ridge Gourd, Knolkhol, Garden Pea, Okra',
+          'Flowers: Dahlia'
+        ];
+        soilRemedies = [
+          'Apply Gypsum to replace sodium with calcium and reduce alkalinity.',
+          'Mix organic matter like cow dung compost or green manure.',
+          'Use drip or sprinkler irrigation to avoid salt accumulation.',
+          'Apply Elemental Sulfur gradually to reduce pH.'
+        ];
+      }
+
+      let waterType = '';
+      let waterImpact = '';
+      let waterRemedies = [];
+      let waterBadge = 'success';
+
+      if (hardness < 75) {
+        waterType = 'Soft Water';
+        waterImpact = 'Safe for irrigation.';
+      } else if (hardness >= 75 && hardness <= 200) {
+        waterType = 'Moderately Hard Water';
+        waterImpact = 'Acceptable for irrigation.';
+        waterBadge = 'warn';
+      } else {
+        waterType = 'Very Hard Water';
+        waterImpact = 'Reduces crop yield and soil quality.';
+        waterRemedies = [
+          'Use rainwater harvesting for mixing.',
+          'Apply gypsum along with irrigation.',
+          'Add organic manure to improve soil structure.',
+          'Prefer drip irrigation to prevent salt stress.'
+        ];
+        waterBadge = 'danger';
+      }
+
+      const generalSuggestions = [
+        'Test soil and water seasonally before major crop changes.',
+        'Use compost, vermicompost, cow dung, and green manure.',
+        'Rotate crops (Example: Legumes after cereals).'
+      ];
+
+      const soilBadge = badgeForPH(pH, lang);
+      const cropGallery = buildCropGallery(suitableCrops, lang);
+
+      const t = (text) => translateText(text, lang);
+
+      const translateArray = (arr) => arr.map(item => t(item));
+      const translatedSuitableCrops = translateArray(suitableCrops);
+      const translatedSoilRemedies = soilRemedies.length ? translateArray(soilRemedies) : [];
+      const translatedSoilMaintenance = soilMaintenance.length ? translateArray(soilMaintenance) : [];
+      const translatedWaterRemedies = waterRemedies.length ? translateArray(waterRemedies) : [];
+      const translatedGeneralSuggestions = translateArray(generalSuggestions);
+
+      const html = `
+        <div class="report-grid">
+          <section class="info-card stat-card">
+            <h3>${t('Soil Snapshot')}</h3>
+            <div class="stat-grid">
+              <div class="stat-chip">
+                <span>${t('Soil pH')}</span>
+                <strong>${pH.toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>${t('Calcium (mg/L)')}</span>
+                <strong>${Number(ca).toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>${t('Magnesium (mg/L)')}</span>
+                <strong>${Number(mg).toFixed(2)}</strong>
+              </div>
+              <div class="stat-chip">
+                <span>${t('Water Hardness (ppm)')}</span>
+                <strong>${hardness.toFixed(2)}</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="info-card soil-card">
+            <header>
+              <h3>${t('Soil Assessment')}</h3>
+              <span class="badge ${soilBadge.tone}">${soilBadge.label}</span>
+            </header>
+            <p>${t(soilType)}</p>
+          </section>
+
+          <section class="info-card crops-card">
+            <h3>${t('Suitable Crops')}</h3>
+            ${toList(translatedSuitableCrops)}
+          </section>
+
+          ${soilRemedies.length ? `
+            <section class="info-card remedies-card">
+              <h3>${t('Soil Remedies')}</h3>
+              ${toList(translatedSoilRemedies)}
+            </section>
+          ` : ''}
+
+          ${soilMaintenance.length ? `
+            <section class="info-card maintenance-card">
+              <h3>${t('Soil Maintenance Tips')}</h3>
+              ${toList(translatedSoilMaintenance)}
+            </section>
+          ` : ''}
+
+          <section class="info-card water-card">
+            <header>
+              <h3>${t('Water Report')}</h3>
+              <span class="badge ${waterBadge}">${t(waterType)}</span>
+            </header>
+            <p>${t(waterImpact)}</p>
+            ${waterRemedies.length ? `<div class="sub-list"><strong>${t('Mitigation')}</strong>${toList(translatedWaterRemedies)}</div>` : ''}
+          </section>
+
+          <section class="info-card suggestions-card">
+            <h3>${t('General Suggestions')}</h3>
+            ${toList(translatedGeneralSuggestions)}
+          </section>
+
+          ${cropGallery ? `
+            <section class="info-card visual-guide-card">
+              ${cropGallery}
+            </section>
+          ` : ''}
+        </div>
+      `;
+      return html;
+    }
+
+    // Translation functions
+    let currentLang = 'en';
+
+    function translateText(text, targetLang) {
+      if (!text || targetLang === 'en') return text;
+      const dict = translations[targetLang];
+      if (!dict) return text;
+      if (dict[text]) return dict[text];
+
+      // Handle "Category: item1, item2" style
+      if (text.includes(':')) {
+        const parts = text.split(':');
+        if (parts.length >= 2) {
+          const category = parts[0].trim();
+          const rest = parts.slice(1).join(':').trim();
+          const translatedCategory = dict[category] || category;
+          const translatedList = rest.split(',').map(item => {
+            const trimmed = item.trim();
+            return dict[trimmed] || trimmed;
+          }).join(', ');
+          return `${translatedCategory}: ${translatedList}`;
         }
       }
 
-      // Update active button
-      langButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.lang === lang);
+      // Fallback: replace known keys in text (word boundaries)
+      let translated = text;
+      for (const [k, v] of Object.entries(dict)) {
+        const escaped = k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`\\b${escaped}\\b`, 'g');
+        translated = translated.replace(regex, v);
+      }
+      return translated;
+    }
+
+    function translatePage(lang) {
+      if (!lang) return;
+      if (lang === currentLang) return;
+      currentLang = lang;
+
+      // elements to translate by innerText
+      const textEls = document.querySelectorAll('[data-i18n], .info-card h3, .info-card p, .info-card li, .stat-chip span, .gallery-card figcaption, .muted, .section-heading strong, .section-heading .muted');
+      textEls.forEach(el => {
+        // use stored original when available, else store it
+        if (!el.dataset.original) el.dataset.original = el.textContent.trim();
+        if (lang === 'en') el.textContent = el.dataset.original;
+        else el.textContent = translateText(el.dataset.original, lang);
       });
-      
-      // If report exists, regenerate it with new language
+
+      // translate labels (label elements)
+      const labels = document.querySelectorAll('label[data-i18n]');
+      labels.forEach(l => {
+        if (!l.dataset.original) l.dataset.original = l.textContent.trim();
+        l.textContent = (lang === 'en') ? l.dataset.original : translateText(l.dataset.original, lang);
+      });
+
+      // translate placeholders (inputs with data-placeholder-i18n)
+      const placeholders = document.querySelectorAll('[data-placeholder-i18n]');
+      placeholders.forEach(inp => {
+        if (!inp.dataset.placeholderOriginal) inp.dataset.placeholderOriginal = inp.getAttribute('placeholder') || '';
+        const orig = inp.dataset.placeholderOriginal;
+        inp.setAttribute('placeholder', (lang === 'en') ? orig : translateText(orig, lang));
+      });
+
+      // translate buttons (Generate / Reset / Translate)
+      const btns = document.querySelectorAll('[data-i18n]');
+      btns.forEach(b => {
+        if (!b.dataset.original) b.dataset.original = b.textContent.trim();
+        if (lang === 'en') b.textContent = b.dataset.original;
+        else b.textContent = translateText(b.dataset.original, lang);
+      });
+
+      // update active state in language list
+      langButtons.forEach(btn => btn.classList.toggle('active', btn.dataset.lang === lang));
+
+      // regenerate report in new language if present
       if (reportDiv.innerHTML && reportDiv.innerHTML.trim() && reportDiv.innerHTML.includes('report-grid')) {
         const pH = parseFloat(phInput.value);
         const ca = parseFloat(caInput.value);
@@ -839,45 +809,91 @@
           reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg, lang);
         }
       }
-    };
+    }
 
     // Toggle translate menu
     translateBtn.addEventListener('click', (e) => {
       e.stopPropagation();
       translateMenu.classList.toggle('hidden');
+      translateMenu.setAttribute('aria-hidden', translateMenu.classList.contains('hidden') ? 'true' : 'false');
     });
 
-    // Close menu when clicking outside
+    // Click outside to close
     document.addEventListener('click', (e) => {
       if (!translateMenu.contains(e.target) && !translateBtn.contains(e.target)) {
         translateMenu.classList.add('hidden');
+        translateMenu.setAttribute('aria-hidden', 'true');
       }
     });
 
-    // Language selection
+    // language selection
     langButtons.forEach(btn => {
       btn.addEventListener('click', () => {
         const lang = btn.dataset.lang;
         translatePage(lang);
         translateMenu.classList.add('hidden');
+        translateMenu.setAttribute('aria-hidden', 'true');
       });
     });
 
+    // run/reset handlers with vibration + visual shake on validation fail
+    runBtn.addEventListener('click', () => {
+      const pH = parseFloat(phInput.value);
+      const ca = parseFloat(caInput.value);
+      const mg = parseFloat(mgInput.value);
 
-    // Store original texts on page load
+      if (Number.isNaN(pH) || Number.isNaN(ca) || Number.isNaN(mg)) {
+        const errorMsg = currentLang === 'te' ? 'దయచేసి అన్ని ఫీల్డ్‌లకు చెల్లుబాటు అయ్యే సంఖ్యా విలువలను నమోదు చేయండి.' :
+                         currentLang === 'hi' ? 'कृपया सभी फ़ील्ड के लिए वैध संख्यात्मक मान दर्ज करें।' :
+                         'Please enter valid numeric values for all fields.';
+        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
+
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        const form = document.getElementById('analysisForm');
+        form.classList.remove('vibrate');
+        void form.offsetWidth;
+        form.classList.add('vibrate');
+        setTimeout(() => form.classList.remove('vibrate'), 700);
+        return;
+      }
+      if (pH < 0 || pH > 14) {
+        const errorMsg = currentLang === 'te' ? 'pH 0 మరియు 14 మధ్య ఉండాలి.' :
+                         currentLang === 'hi' ? 'pH 0 और 14 के बीच होना चाहिए।' :
+                         'pH must be between 0 and 14.';
+        reportDiv.innerHTML = `<pre>${errorMsg}</pre>`;
+        if (navigator.vibrate) navigator.vibrate(300);
+        const form = document.getElementById('analysisForm');
+        form.classList.remove('vibrate');
+        void form.offsetWidth;
+        form.classList.add('vibrate');
+        setTimeout(() => form.classList.remove('vibrate'), 700);
+        return;
+      }
+
+      reportDiv.innerHTML = classifySoilAndReport(pH, ca, mg, currentLang);
+      reportDiv.scrollIntoView({behavior:'smooth'});
+    });
+
+    resetBtn.addEventListener('click', () => {
+      phInput.value = '';
+      caInput.value = '';
+      mgInput.value = '';
+      reportDiv.innerHTML = '';
+      phInput.focus();
+    });
+
+    // store original texts & placeholders on load
     document.addEventListener('DOMContentLoaded', () => {
-      // Set English as active by default
-      langButtons.forEach(btn => {
-        if (btn.dataset.lang === 'en') btn.classList.add('active');
+      // store originals for elements with data-i18n
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        if (!el.dataset.original) el.dataset.original = el.textContent.trim();
       });
-      
-      // Store original texts for all elements
-      const allElements = document.querySelectorAll('h1, label, button:not(.lang-btn), .muted');
-      allElements.forEach(el => {
-        if (el.textContent && el.textContent.trim()) {
-          el.dataset.original = el.textContent.trim();
-        }
+      // store placeholders
+      document.querySelectorAll('[data-placeholder-i18n]').forEach(el => {
+        if (!el.dataset.placeholderOriginal) el.dataset.placeholderOriginal = el.getAttribute('placeholder') || '';
       });
+      // set english active
+      langButtons.forEach(btn => { if (btn.dataset.lang === 'en') btn.classList.add('active'); });
     });
   </script>
 </body>
