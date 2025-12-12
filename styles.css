@@ -29,7 +29,7 @@ body{
   position:relative;
 }
 
-/* ----------- THUMBNAIL SPLASH ANIMATION ----------- */
+/* ----------- THUMBNAIL SPLASH ANIMATION (updated full) ----------- */
 .thumbnail-container {
   position: fixed;
   inset: 0;
@@ -37,30 +37,39 @@ body{
   height: 100vh;
   pointer-events: none;
   z-index: 9999;
+  /* keep container as stacking context for the absolutely positioned thumbnail */
 }
 
 .thumbnail {
+  /* changed to absolute for exact final-position control */
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100vw;
   height: 100vh;
   object-fit: cover;
   transform-origin: top left;
   border-radius: 0;
   animation: shrinkToChromeProfile 3s forwards ease-in-out;
+  /* make it interactive after animation if needed (remove pointer-events:none) */
 }
 
+/* Desktop -> shrink and move to top-right */
 @keyframes shrinkToChromeProfile {
   0% {
     width: 100vw;
     height: 100vh;
     border-radius: 0;
-    transform: translate(0,0);
+    transform: translate(0, 0) scale(1);
     box-shadow: none;
   }
   100% {
+    /* final circle size */
     width: 64px;
     height: 64px;
     border-radius: 50%;
-    transform: translate(calc(100vw - 80px), 20px);
+    /* place it flush near top-right with a small 16-20px margin */
+    transform: translate(calc(100vw - 80px), 20px) scale(1);
     border: 3px solid #ffffff;
     box-shadow: 0 4px 18px rgba(0,0,0,0.28);
     object-fit: cover;
@@ -554,14 +563,22 @@ pre{
       width: 100vw;
       height: 100vh;
       border-radius: 0;
-      transform: translate(0,0);
+      transform: translate(0,0) scale(1);
       box-shadow: none;
     }
     100% {
+      /* slightly smaller circle for mobile */
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      transform: translate(calc(100vw - 200px), 24px);
+      /*
+        Use calc with viewport width so it ends pinned to the right edge.
+        We subtract the thumbnail width + desired margin (here 20px):
+        calc(100vw - 52px - 20px) -> equals translateX amount.
+        Because transform translate uses the element's own coordinate space,
+        the same calc works to shift the element to the desired top-right spot.
+      */
+      transform: translate(calc(100vw - 72px), 24px) scale(1);
       border: 3px solid #ffffff;
       box-shadow: 0 3px 14px rgba(0,0,0,0.26);
       object-fit: cover;
