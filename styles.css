@@ -578,7 +578,7 @@ pre{
         Because transform translate uses the element's own coordinate space,
         the same calc works to shift the element to the desired top-right spot.
       */
-      transform: translate(calc(100vw - 72px), 24px) scale(1);
+      transform: translate(calc(100vw - 20px), 24px) scale(1);
       border: 3px solid #ffffff;
       box-shadow: 0 3px 14px rgba(0,0,0,0.26);
       object-fit: cover;
