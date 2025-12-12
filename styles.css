@@ -50,7 +50,7 @@ body{
   object-fit: cover;
   transform-origin: top left;
   border-radius: 0;
-  animation: shrinkToChromeProfile 3s forwards ease-in-out;
+  animation: shrinkToChromeProfile 4s forwards ease-in-out;
   /* make it interactive after animation if needed (remove pointer-events:none) */
 }
 
@@ -555,7 +555,7 @@ pre{
 
   /* smaller Chrome-style profile pic on mobile */
   .thumbnail{
-    animation: shrinkToChromeProfileMobile 3s forwards ease-in-out;
+    animation: shrinkToChromeProfileMobile 4s forwards ease-in-out;
   }
 
   @keyframes shrinkToChromeProfileMobile {
