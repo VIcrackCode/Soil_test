@@ -16,8 +16,7 @@
 
 body{
   margin:0;
-  overflow-x:hidden;       /* prevent horizontal scroll */
-  /* vertical scroll is allowed by default */
+  overflow-x:hidden;
   font-family:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
   background-image:url("background_img/land.jpg");
   background-size:cover;
@@ -31,18 +30,15 @@ body{
 }
 
 /* ----------- THUMBNAIL SPLASH ANIMATION ----------- */
-
-/* Fullscreen container stays fixed, doesn't block clicks/scroll */
 .thumbnail-container {
   position: fixed;
   inset: 0;
   width: 100vw;
   height: 100vh;
-  pointer-events: none;   /* VERY important: no blocking */
+  pointer-events: none;
   z-index: 9999;
 }
 
-/* Start fullscreen then shrink like Chrome profile picture */
 .thumbnail {
   width: 100vw;
   height: 100vh;
@@ -52,7 +48,6 @@ body{
   animation: shrinkToChromeProfile 3s forwards ease-in-out;
 }
 
-/* Desktop / default keyframes */
 @keyframes shrinkToChromeProfile {
   0% {
     width: 100vw;
@@ -62,11 +57,10 @@ body{
     box-shadow: none;
   }
   100% {
-    width: 64px;             /* Chrome-like size */
+    width: 64px;
     height: 64px;
-    border-radius: 50%;      /* Circle */
+    border-radius: 50%;
     transform: translate(calc(100vw - 100px), 20px);
-    /* 64px + 20px margin */
     border: 3px solid #ffffff;
     box-shadow: 0 4px 18px rgba(0,0,0,0.28);
     object-fit: cover;
@@ -74,7 +68,6 @@ body{
 }
 
 /* ----------- PAGE CONTENT ----------- */
-
 .container{
   max-width:960px;
   margin:0 auto;
@@ -108,6 +101,7 @@ header{
   font-weight:600;
   cursor:pointer;
   transition:all 0.2s;
+  pointer-events: auto; /* ensure clickable */
 }
 
 .utility-btn:hover{
@@ -121,14 +115,51 @@ header{
 }
 
 .translate-group{
-  position:relative;
+  position:relative; /* for the dropdown menu */
 }
 
+/* keep card positioned normally */
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:24px;
+  box-shadow:0 25px 50px -12px rgba(15,23,42,0.15);
+  border:1px solid rgba(148,163,184,0.2);
+  position: relative;
+}
+
+/* ACTIONS ROW (buttons + translate) */
+form{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+  align-items:end;
+}
+
+.actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+/* make buttons consistent size */
+.actions button,
+.actions .utility-btn{
+  min-width:120px;
+}
+
+/* the translate button inside actions should be visually compact */
+.actions .utility-btn{
+  padding:8px 10px;
+  font-size:13px;
+}
+
+/* Translate menu styling */
 .translate-menu{
   position:absolute;
-  top:100%;
+  top:calc(100% + 8px);
   right:0;
-  margin-top:8px;
+  margin-top:0;
   background:var(--card);
   border:1px solid var(--border);
   border-radius:8px;
@@ -180,21 +211,6 @@ h1{
   font-weight:600;
 }
 
-.card{
-  background:var(--card);
-  border-radius:16px;
-  padding:24px;
-  box-shadow:0 25px 50px -12px rgba(15,23,42,0.15);
-  border:1px solid rgba(148,163,184,0.2);
-}
-
-form{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
-  align-items:end;
-}
-
 label{
   display:block;
   font-size:13px;
@@ -217,11 +233,6 @@ input[type="number"]:focus{
   border-color:var(--accent);
   outline:none;
   box-shadow:0 0 0 3px rgba(37,99,235,0.15);
-}
-
-.actions{
-  display:flex;
-  gap:10px;
 }
 
 button{
@@ -481,6 +492,25 @@ pre{
   font-size:14px;
 }
 
+/* VIBRATION / SHAKE ANIMATION */
+@keyframes vibrate {
+  0% { transform: translateX(0); }
+  10% { transform: translateX(-4px) rotate(-0.5deg); }
+  20% { transform: translateX(4px) rotate(0.5deg); }
+  30% { transform: translateX(-4px) rotate(-0.5deg); }
+  40% { transform: translateX(4px) rotate(0.5deg); }
+  50% { transform: translateX(-2px) rotate(-0.3deg); }
+  60% { transform: translateX(2px) rotate(0.3deg); }
+  70% { transform: translateX(-1px); }
+  80% { transform: translateX(1px); }
+  100% { transform: translateX(0); }
+}
+
+.vibrate {
+  animation: vibrate 520ms linear;
+  box-shadow: 0 8px 30px rgba(15,23,42,0.12);
+}
+
 /* ----------- MOBILE TWEAKS (≤ 520px) ----------- */
 @media (max-width:520px){
 
@@ -490,6 +520,7 @@ pre{
 
   .actions{
     flex-direction:column;
+    align-items:stretch;
   }
 
   header{
@@ -509,8 +540,8 @@ pre{
   }
 
   .translate-menu{
-    right:auto;
     left:0;
+    right:auto;
   }
 
   /* smaller Chrome-style profile pic on mobile */
@@ -530,8 +561,7 @@ pre{
       width: 52px;
       height: 52px;
       border-radius: 50%;
-      transform: translate(calc(100vw - 80px), 24px);
-      /* 52px + 20px margin */
+      transform: translate(calc(100vw - 200px), 24px);
       border: 3px solid #ffffff;
       box-shadow: 0 3px 14px rgba(0,0,0,0.26);
       object-fit: cover;
